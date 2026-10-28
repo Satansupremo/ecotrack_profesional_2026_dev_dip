@@ -6,7 +6,7 @@ import org.ecotrack_project.dto.response.ApiResponse;
 import org.ecotrack_project.dto.response.SolicitudResponse;
 import org.ecotrack_project.entity.SolicitudEntity;
 import org.ecotrack_project.entity.UsuarioEntity;
-import org.ecotrack_project.enums.SolicitudEstado;
+import org.ecotrack_project.enums.EstadoSolicitud;
 import org.ecotrack_project.initialize.Initialize;
 import org.ecotrack_project.repository.SolicitudRepository;
 import org.ecotrack_project.repository.UsuarioRepository;
@@ -18,7 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -112,11 +112,11 @@ public class SolicitudServiceImpl implements SolicitudService {
         }
 
         SolicitudEntity entity = SolicitudEntity.builder()
-                .fechaRegistro(new Date())
+                .fechaRegistro(LocalDateTime.now())
                 .titulo(solicitudRequest.getTitulo())
                 .descripcion(solicitudRequest.getDescripcion())
                 .ubicacion(solicitudRequest.getUbicacion())
-                .estado(SolicitudEstado.PENDIENTE)
+                .estado(EstadoSolicitud.PENDIENTE)
                 .usuario(usuarioOptional.get())
                 .coordinador(null)
                 .fechaFinalizacion(null)

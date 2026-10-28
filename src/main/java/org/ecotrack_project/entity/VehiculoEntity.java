@@ -2,15 +2,18 @@ package org.ecotrack_project.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.ecotrack_project.enums.Rol;
+import org.ecotrack_project.enums.TipoVehiculo;
 
-import java.util.Date;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-@Entity(name = "tb_vehiculo")
-@Table
+@Entity
+@Table(name = "tb_vehiculo")
 @Builder
 public class VehiculoEntity {
 
@@ -18,16 +21,26 @@ public class VehiculoEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_vehiculo")
     private int idVehiculo;
-    @Column(name = "fecha_registro")
-    private Date fechaRegistro;
-    @Column(name = "placa")
+
+    @Column(name = "fecha_registro", nullable = false)
+    private LocalDateTime fechaRegistro;
+
+    @Column(name = "placa", nullable = false, unique = true)
     private String placa;
-    @Column(name = "marca")
+
+    @Column(name = "marca", nullable = false)
     private String marca;
-    @Column(name = "modelo")
+
+    @Column(name = "modelo", nullable = false)
     private String modelo;
-    @Column(name = "capacidad_libras")
-    private Float capacidadLibras;
-    @Column(name = "estado")
+
+    @Column(name = "capacidad_libras", nullable = false, precision = 10, scale = 2)
+    private BigDecimal capacidadLibras;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo", nullable = false)
+    private TipoVehiculo tipo;
+
+    @Column(name = "estado", nullable = false)
     private boolean estado;
 }

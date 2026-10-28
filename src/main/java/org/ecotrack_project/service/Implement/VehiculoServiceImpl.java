@@ -13,7 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -56,7 +56,7 @@ public class VehiculoServiceImpl implements VehiculoService {
     @Override
     public ApiResponse<Integer> registrarVehiculo(VehiculoRequest vehiculoRequest) {
         VehiculoEntity entity = VehiculoEntity.builder()
-                .fechaRegistro(new Date())
+                .fechaRegistro(LocalDateTime.now())
                 .placa(vehiculoRequest.getPlaca())
                 .marca(vehiculoRequest.getMarca())
                 .modelo(vehiculoRequest.getModelo())

@@ -2,9 +2,9 @@ package org.ecotrack_project.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.ecotrack_project.enums.SolicitudEstado;
+import org.ecotrack_project.enums.EstadoSolicitud;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,23 +19,31 @@ public class SolicitudEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_solicitud")
     private int idSolicitud;
+
     @Column(name = "fecha_registro", nullable = false)
-    private Date fechaRegistro;
+    private LocalDateTime fechaRegistro;
+
     @Column(name = "titulo", nullable = false)
     private String titulo;
-    @Column(name = "descripcion", nullable = false)
+
+    @Column(name = "descripcion", nullable = false, columnDefinition = "TEXT")
     private String descripcion;
+
     @Column(name = "ubicacion", nullable = false)
     private String ubicacion;
+
     @Column(name = "fecha_finalizacion")
-    private Date fechaFinalizacion;
-    @Enumerated(EnumType.STRING)
-    @Column(name = "estado", nullable = false)
-    private SolicitudEstado estado;
-    @ManyToOne
+    private LocalDateTime fechaFinalizacion;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_usuario", nullable = false)
     private UsuarioEntity usuario;
-    @ManyToOne
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_coordinador")
     private UsuarioEntity coordinador;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado", nullable = false)
+    private EstadoSolicitud estado;
 }

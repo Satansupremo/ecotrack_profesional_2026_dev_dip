@@ -1,0 +1,13 @@
+package org.ecotrack_project.enums;
+
+public enum EstadoSolicitud {
+    PENDIENTE,
+    PAGO_INICIAL_PENDIENTE,
+    PAGO_INICIAL_EFECTUADO,
+    PAGO_INICIAL_CONFIRMADO,
+    PAGO_TOTAL_PENDIENTE,
+    PAGO_TOTAL_EFECTUADO,
+    PAGO_TOTAL_CONFIRMADO,
+    PROGRAMADO,
+    FINALIZADO
+}

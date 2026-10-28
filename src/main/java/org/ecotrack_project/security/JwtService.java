@@ -29,12 +29,15 @@ public class JwtService {
     }
 
     public String generarToken(UserDetails userDetails) {
+        UsuarioDetails usuarioDetails = (UsuarioDetails) userDetails;
+
         Date fechaActual = new Date();
-        Date fechaExpiracion =
-                new Date(fechaActual.getTime() + expiration);
+        Date fechaExpiracion = new Date(fechaActual.getTime() + expiration);
 
         return Jwts.builder()
-                .subject(userDetails.getUsername())
+                .subject(usuarioDetails.getUsername())
+                .claim("idUsuario", usuarioDetails.getUsuario().getIdUsuario())
+                .claim("rol", usuarioDetails.getUsuario().getRol().name())
                 .issuedAt(fechaActual)
                 .expiration(fechaExpiracion)
                 .signWith(getSigningKey())

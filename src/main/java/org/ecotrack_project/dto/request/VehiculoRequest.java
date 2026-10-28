@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -20,5 +22,5 @@ public class VehiculoRequest {
     private String modelo;
     @NotNull(message = "La capacidad en libras es obligatoria")
     @Positive(message = "La capacidad debe ser un numero mayor a cero")
-    private Float capacidadLibras;
+    private BigDecimal capacidadLibras;
 }

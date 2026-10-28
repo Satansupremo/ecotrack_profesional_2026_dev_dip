@@ -1,6 +1,6 @@
 package org.ecotrack_project.enums;
 
-public enum ProgramacionEstado {
+public enum EstadoProgramacion {
     ASIGNADO,
     EJECUTADO,
     FINALIZADO

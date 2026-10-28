@@ -1,4 +1,3 @@
-
 package org.ecotrack_project.entity;
 
 import jakarta.persistence.*;
@@ -18,18 +17,31 @@ public class UsuarioEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_usuario")
     private int idUsuario;
+
     @Column(name = "nombre", nullable = false)
     private String nombre;
+
     @Column(name = "apellido", nullable = false)
     private String apellido;
+
+    @Column(name = "correo", nullable = false, unique = true)
+    private String correo;
+
+    @Column(name = "celular")
+    private String celular;
+
     @Column(name = "username", nullable = false, unique = true)
     private String username;
+
     @Column(name = "password", nullable = false)
     private String password;
+
     @Column(name = "dni", nullable = false, unique = true)
     private String dni;
+
     @Column(name = "estado", nullable = false)
     private boolean estado;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "rol", nullable = false)
     private Rol rol;
