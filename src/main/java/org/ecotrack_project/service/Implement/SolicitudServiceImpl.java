@@ -4,14 +4,12 @@ package org.ecotrack_project.service.Implement;
 import lombok.RequiredArgsConstructor;
 import org.ecotrack_project.dto.request.SolicitudRequest;
 import org.ecotrack_project.dto.response.ApiResponse;
-import org.ecotrack_project.dto.response.MedioPagoResponse;
 import org.ecotrack_project.dto.response.SolicitudResponse;
 import org.ecotrack_project.entity.SolicitudEntity;
 import org.ecotrack_project.entity.UsuarioEntity;
 import org.ecotrack_project.enums.EstadoSolicitud;
 import org.ecotrack_project.enums.Rol;
 import org.ecotrack_project.initialize.Initialize;
-import org.ecotrack_project.repository.MedioPagoRepository;
 import org.ecotrack_project.repository.SolicitudRepository;
 import org.ecotrack_project.repository.UsuarioRepository;
 import org.ecotrack_project.service.SolicitudService;
@@ -307,4 +305,100 @@ public class SolicitudServiceImpl implements SolicitudService {
                 "Solicitud pendiente obtenida correctamente"
         );
     }
+
+    @Override
+    public ApiResponse<Integer> obtenerTotalSolicitudesPIE() {
+
+        Optional<UsuarioEntity> usuarioOptional = obtenerUsuarioAutenticado();
+
+        if (usuarioOptional.isEmpty() ||
+                (usuarioOptional.get().getRol() != Rol.COORDINADOR &&
+                        usuarioOptional.get().getRol() != Rol.ADMINISTRADOR)) {
+            return ApiResponse.error("Usuario no encontrado o no autorizado");
+        }
+
+        int totalSolicitudes = (int) solicitudRepository
+                .countByEstado(EstadoSolicitud.PAGO_INICIAL_EFECTUADO);
+
+        return ApiResponse.success(
+                totalSolicitudes,
+                "Total de solicitudes PIE obtenido correctamente"
+        );
+    }
+
+    @Override
+    public ApiResponse<Integer> obtenerTotalPaginasPIE() {
+
+        Optional<UsuarioEntity> usuarioOptional = obtenerUsuarioAutenticado();
+
+        if (usuarioOptional.isEmpty() ||
+                (usuarioOptional.get().getRol() != Rol.COORDINADOR &&
+                        usuarioOptional.get().getRol() != Rol.ADMINISTRADOR)) {
+            return ApiResponse.error("Usuario no encontrado o no autorizado");
+        }
+
+        long totalRegistros = solicitudRepository
+                .countByEstado(EstadoSolicitud.PAGO_INICIAL_EFECTUADO);
+
+        int totalPaginas = (int) Math.ceil(
+                (double) totalRegistros / Initialize.TAMANIO_PAGINA
+        );
+
+        return ApiResponse.success(
+                totalPaginas,
+                "Total de páginas de solicitudes PIE obtenido correctamente"
+        );
+    }
+
+    @Override
+    public ApiResponse<List<SolicitudResponse>> listarSolicitudesPIE(int pagina) {
+
+        Optional<UsuarioEntity> usuarioOptional = obtenerUsuarioAutenticado();
+
+        if (usuarioOptional.isEmpty() ||
+                (usuarioOptional.get().getRol() != Rol.COORDINADOR &&
+                        usuarioOptional.get().getRol() != Rol.ADMINISTRADOR)) {
+            return ApiResponse.error("Usuario no encontrado o no autorizado");
+        }
+
+        if (pagina < 0) {
+            return ApiResponse.error("El número de página no es válido");
+        }
+
+        Pageable pageable = PageRequest.of(
+                pagina,
+                Initialize.TAMANIO_PAGINA,
+                org.springframework.data.domain.Sort.by(
+                        org.springframework.data.domain.Sort.Direction.ASC,
+                        "fechaRegistro"
+                ).and(
+                        org.springframework.data.domain.Sort.by(
+                                org.springframework.data.domain.Sort.Direction.ASC,
+                                "idSolicitud"
+                        )
+                )
+        );
+
+        Page<SolicitudEntity> solicitudesPage = solicitudRepository
+                .findByEstado(EstadoSolicitud.PAGO_INICIAL_EFECTUADO, pageable);
+
+        List<SolicitudResponse> response = solicitudesPage.getContent()
+                .stream()
+                .map(entity -> SolicitudResponse.builder()
+                        .idSolicitud(entity.getIdSolicitud())
+                        .titulo(entity.getTitulo())
+                        .descripcion(entity.getDescripcion())
+                        .ubicacion(entity.getUbicacion())
+                        .fechaRegistro(entity.getFechaRegistro())
+                        .fechaFinalizacion(entity.getFechaFinalizacion())
+                        .estado(entity.getEstado().name())
+                        .build())
+                .collect(Collectors.toList());
+
+        return ApiResponse.success(
+                response,
+                "Lista de solicitudes PIE obtenida correctamente"
+        );
+    }
+
 }

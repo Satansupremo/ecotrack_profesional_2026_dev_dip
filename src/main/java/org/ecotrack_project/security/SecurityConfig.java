@@ -74,8 +74,23 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 "/api/solicitud/pendientes/**",
-                                "/api/asignacion-inicial/**"
+                                "/api/solicitud/pie/**",
+                                "/api/pago-inicial/pie/**"
                         ).hasAnyRole("COORDINADOR", "ADMINISTRADOR")
+
+                        .requestMatchers(
+                                "/api/asignacion-inicial/buscar/**",
+                                "/api/pago-inicial/pago/registrar/**"
+                        ).authenticated()
+
+                        .requestMatchers("/api/asignacion-inicial/registrar/**")
+                        .hasAnyRole("COORDINADOR", "ADMINISTRADOR")
+
+                        .requestMatchers("/api/medio-pago/**")
+                        .authenticated()
+
+                        .requestMatchers("/api/notificacion/**")
+                        .authenticated()
 
                         .requestMatchers("/api/solicitud/**")
                         .authenticated()

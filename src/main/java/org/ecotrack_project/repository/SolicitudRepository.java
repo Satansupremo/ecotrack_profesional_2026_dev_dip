@@ -1,3 +1,4 @@
+
 package org.ecotrack_project.repository;
 
 import org.ecotrack_project.entity.SolicitudEntity;

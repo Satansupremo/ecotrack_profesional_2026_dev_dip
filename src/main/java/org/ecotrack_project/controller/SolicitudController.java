@@ -124,4 +124,41 @@ public class SolicitudController {
 
         return ResponseEntity.badRequest().body(response);
     }
+
+    // SOLICITUDES PIE
+
+    @GetMapping("/pie/total")
+    public ResponseEntity<ApiResponse<Integer>> obtenerTotalSolicitudesPIE() {
+
+        var response = solicitudService.obtenerTotalSolicitudesPIE();
+
+        if (response.isSuccess())
+            return ResponseEntity.ok(response);
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping("/pie/paginas")
+    public ResponseEntity<ApiResponse<Integer>> obtenerTotalPaginasPIE() {
+
+        var response = solicitudService.obtenerTotalPaginasPIE();
+
+        if (response.isSuccess())
+            return ResponseEntity.ok(response);
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping("/pie/listar")
+    public ResponseEntity<ApiResponse<List<SolicitudResponse>>> listarSolicitudesPIE(
+            @RequestParam(defaultValue = "0") int pagina) {
+
+        var response = solicitudService.listarSolicitudesPIE(pagina);
+
+        if (response.isSuccess())
+            return ResponseEntity.ok(response);
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
 }

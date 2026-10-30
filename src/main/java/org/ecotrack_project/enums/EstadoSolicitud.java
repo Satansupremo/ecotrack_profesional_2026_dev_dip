@@ -10,5 +10,6 @@ public enum EstadoSolicitud {
     PAGO_TOTAL_CONFIRMADO,
     PROGRAMADO,
     FINALIZADO,
-    CANCELADO
+    CANCELADO,
+    RECHAZADO,
 }
