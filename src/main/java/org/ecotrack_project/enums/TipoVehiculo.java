@@ -1,18 +1,9 @@
 package org.ecotrack_project.enums;
 
 public enum TipoVehiculo {
-    TAXI,
-    MINIVAN,
-    FURGONETA,
-    CAMIONETA,
-    CAMION,
-    CAMION_BARANDA,
-    CAMION_VOLQUETE,
-    TRACTOR,
-    TRACTOR_CON_REMOLQUE,
-    RETROEXCAVADORA,
+    VOLQUETE,
     EXCAVADORA,
+    RETROEXCAVADORA,
     CARGADOR_FRONTAL,
-    MOTONIVELADORA,
-    CISTERNA
+    TRACTOR_DE_ORUGAS
 }

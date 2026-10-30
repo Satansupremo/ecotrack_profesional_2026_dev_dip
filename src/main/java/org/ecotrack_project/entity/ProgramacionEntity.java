@@ -38,6 +38,10 @@ public class ProgramacionEntity {
     @JoinColumn(name = "id_coordinador", nullable = false)
     private UsuarioEntity coordinador;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_jefe_unidad", nullable = false)
+    private UsuarioEntity jefeUnidad;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false)
     private EstadoProgramacion estado;

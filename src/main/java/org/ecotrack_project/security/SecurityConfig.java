@@ -71,18 +71,18 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
-                        .requestMatchers("/api/prueba/usuario")
-                        .hasRole("USUARIO")
-                        .requestMatchers("/api/prueba/administrador")
-                        .hasRole("ADMINISTRADOR")
-                        .requestMatchers("/api/prueba/coordinador")
-                        .hasRole("COORDINADOR")
-                        .requestMatchers("/api/prueba/transportista")
-                        .hasRole("TRANSPORTISTA")
-                        .requestMatchers("/api/prueba/operario")
-                        .hasRole("OPERARIO")
+
+                        .requestMatchers(
+                                "/api/solicitud/pendientes/**",
+                                "/api/asignacion-inicial/**"
+                        ).hasAnyRole("COORDINADOR", "ADMINISTRADOR")
+
                         .requestMatchers("/api/solicitud/**")
                         .authenticated()
+
+                        .requestMatchers("/**")
+                        .hasRole("ADMINISTRADOR")
+
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())

@@ -39,10 +39,11 @@ public class SolicitudEntity {
     @JoinColumn(name = "id_usuario", nullable = false)
     private UsuarioEntity usuario;
 
+    /*
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_coordinador")
     private UsuarioEntity coordinador;
-
+     */
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false)
     private EstadoSolicitud estado;

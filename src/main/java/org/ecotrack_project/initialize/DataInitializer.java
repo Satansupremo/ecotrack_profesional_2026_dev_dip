@@ -1,10 +1,12 @@
 
 package org.ecotrack_project.initialize;
 
+import org.ecotrack_project.entity.MedioPagoEntity;
 import org.ecotrack_project.entity.UsuarioEntity;
 import org.ecotrack_project.entity.VehiculoEntity;
 import org.ecotrack_project.enums.Rol;
 import org.ecotrack_project.enums.TipoVehiculo;
+import org.ecotrack_project.repository.MedioPagoRepository;
 import org.ecotrack_project.repository.UsuarioRepository;
 import org.ecotrack_project.repository.VehiculoRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -24,6 +26,7 @@ public class DataInitializer implements CommandLineRunner {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
 
+    private final MedioPagoRepository medioPagoRepository;
     private static final String PASSWORD_PRUEBA = "123456";
 
     @Override
@@ -37,7 +40,7 @@ public class DataInitializer implements CommandLineRunner {
                     .marca("Toyota")
                     .modelo("Hilux")
                     .capacidadLibras(new BigDecimal("2200.00"))
-                    .tipo(TipoVehiculo.CAMIONETA)
+                    .tipo(TipoVehiculo.CARGADOR_FRONTAL)
                     .estado(true)
                     .build();
 
@@ -47,7 +50,7 @@ public class DataInitializer implements CommandLineRunner {
                     .marca("Volvo")
                     .modelo("FH16")
                     .capacidadLibras(new BigDecimal("40000.00"))
-                    .tipo(TipoVehiculo.CAMION)
+                    .tipo(TipoVehiculo.EXCAVADORA)
                     .estado(true)
                     .build();
 
@@ -57,7 +60,7 @@ public class DataInitializer implements CommandLineRunner {
                     .marca("Hyundai")
                     .modelo("H100")
                     .capacidadLibras(new BigDecimal("3500.00"))
-                    .tipo(TipoVehiculo.MINIVAN)
+                    .tipo(TipoVehiculo.VOLQUETE)
                     .estado(true)
                     .build();
 
@@ -83,6 +86,37 @@ public class DataInitializer implements CommandLineRunner {
         crearUsuarioSiNoExiste(
                 "operario", "Maria", "Vargas", "70000005",
                 "maria.vargas@ecotrack.test", "987654325", Rol.OPERARIO);
+
+        crearMediosPago();
+    }
+
+    private void crearMediosPago() {
+
+        if (medioPagoRepository.count() == 0) {
+
+            MedioPagoEntity yape = MedioPagoEntity.builder()
+                    .nombre("Yape")
+                    .descripcion("Pago mediante billetera digital Yape")
+                    .numeroCuenta("987654321")
+                    .estado(true)
+                    .build();
+
+            MedioPagoEntity bcp = MedioPagoEntity.builder()
+                    .nombre("BCP")
+                    .descripcion("Transferencia bancaria mediante Banco de Crédito del Perú")
+                    .numeroCuenta("191-1234567890-0-12")
+                    .estado(true)
+                    .build();
+
+            MedioPagoEntity interbank = MedioPagoEntity.builder()
+                    .nombre("Interbank")
+                    .descripcion("Transferencia bancaria mediante Interbank")
+                    .numeroCuenta("200-1234567890123")
+                    .estado(true)
+                    .build();
+
+            medioPagoRepository.saveAll(List.of(yape, bcp, interbank));
+        }
     }
 
     private void crearUsuarioSiNoExiste(

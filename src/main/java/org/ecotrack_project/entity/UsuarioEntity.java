@@ -2,6 +2,7 @@ package org.ecotrack_project.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.ecotrack_project.enums.EstadoUsuario;
 import org.ecotrack_project.enums.Rol;
 
 @NoArgsConstructor
