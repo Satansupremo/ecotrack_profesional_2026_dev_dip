@@ -42,4 +42,17 @@ public class AsignacionInicialController {
 
         return ResponseEntity.badRequest().body(response);
     }
+
+    @PostMapping("/validar/{idSolicitud}")
+    public ResponseEntity<ApiResponse<Boolean>> validarAsignacionInicial(
+            @PathVariable int idSolicitud,
+            @Valid @RequestBody AsignacionInicialRequest request) {
+
+        var response = asignacionInicialService.validarAsignacionInicial(idSolicitud);
+
+        if (response.isSuccess())
+            return ResponseEntity.ok(response);
+
+        return ResponseEntity.badRequest().body(response);
+    }
 }

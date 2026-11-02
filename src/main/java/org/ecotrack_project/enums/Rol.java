@@ -5,5 +5,6 @@ public enum Rol {
     ADMINISTRADOR,
     COORDINADOR,
     TRANSPORTISTA,
-    OPERARIO
+    OPERARIO,
+    JEFE_UNIDAD
 }

@@ -7,6 +7,7 @@ import org.ecotrack_project.dto.request.UsuarioRequest;
 import org.ecotrack_project.dto.response.ApiResponse;
 import org.ecotrack_project.entity.UsuarioEntity;
 import org.ecotrack_project.enums.Rol;
+import org.ecotrack_project.enums.SituacionUsuario;
 import org.ecotrack_project.repository.UsuarioRepository;
 import org.ecotrack_project.security.JwtService;
 import org.ecotrack_project.security.UsuarioDetails;
@@ -79,6 +80,7 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .celular(usuarioRequest.getCelular())
                 .username(usuarioRequest.getUsername())
                 .password(passwordEncoder.encode(usuarioRequest.getPassword()))
+                .situacion(SituacionUsuario.NINGUNO)
                 .estado(true)
                 .rol(Rol.USUARIO)
                 .build();

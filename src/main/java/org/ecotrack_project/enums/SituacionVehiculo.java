@@ -1,9 +1,10 @@
 package org.ecotrack_project.enums;
 
-public enum EstadoVehiculo {
+public enum SituacionVehiculo {
     DISPONIBLE,
     ASIGNADO,
     MANTENIMIENTO,
+    RESERVADO,
     INACTIVO
 }
 

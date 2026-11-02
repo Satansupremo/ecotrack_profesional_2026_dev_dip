@@ -51,6 +51,10 @@ public class SecurityConfig {
         return configuration.getAuthenticationManager();
     }
 
+
+
+
+
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http) throws Exception {
@@ -64,6 +68,7 @@ public class SecurityConfig {
                         )
                 )
                 .authorizeHttpRequests(auth -> auth
+
                         .requestMatchers(
                                 "/api/usuario/login",
                                 "/api/usuario/registro",
@@ -73,24 +78,43 @@ public class SecurityConfig {
                         ).permitAll()
 
                         .requestMatchers(
+                                "/api/programacion/mis-programaciones/**",
+                                "/api/reserva-unidad/**"
+                        ).hasAnyRole("JEFE_UNIDAD", "ADMINISTRADOR")
+
+                        .requestMatchers(
                                 "/api/solicitud/pendientes/**",
                                 "/api/solicitud/pie/**",
-                                "/api/pago-inicial/pie/**"
+                                "/api/pago-inicial/pie/**",
+                                "/api/pago-total/ptt/**",
+                                "/api/solicitud/pi-confirmadas/**",
+                                "/api/solicitud/pago-total/**",
+                                "/api/programacion/**"
                         ).hasAnyRole("COORDINADOR", "ADMINISTRADOR")
 
                         .requestMatchers(
                                 "/api/asignacion-inicial/buscar/**",
-                                "/api/pago-inicial/pago/registrar/**"
+                                "/api/asignacion-total/buscar/**",
+                                "/api/pago-inicial/pago/registrar/**",
+                                "/api/pago-total/pago/registrar/**"
                         ).authenticated()
 
-                        .requestMatchers("/api/asignacion-inicial/registrar/**")
-                        .hasAnyRole("COORDINADOR", "ADMINISTRADOR")
+                        .requestMatchers(
+                                "/api/asignacion-inicial/registrar/**",
+                                "/api/asignacion-inicial/validar/**",
+                                "/api/asignacion-total/registrar/**",
+                                "/api/asignacion-total/verificar/**"
+                        ).hasAnyRole("COORDINADOR", "ADMINISTRADOR")
 
                         .requestMatchers("/api/medio-pago/**")
                         .authenticated()
 
                         .requestMatchers("/api/notificacion/**")
                         .authenticated()
+
+                        .requestMatchers(
+                                "/api/asignacion-coordinador/**"
+                        ).hasRole("COORDINADOR")
 
                         .requestMatchers("/api/solicitud/**")
                         .authenticated()
@@ -108,6 +132,7 @@ public class SecurityConfig {
 
         return http.build();
     }
+
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

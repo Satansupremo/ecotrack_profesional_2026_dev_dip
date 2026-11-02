@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Getter
@@ -19,6 +20,9 @@ public class PagoTotalRequest {
     @NotNull(message = "El monto es obligatorio")
     @DecimalMin(value = "0.01", message = "El monto debe ser mayor que cero")
     private BigDecimal monto;
+
+    @NotNull(message = "La fecha de operación es obligatoria")
+    private LocalDate fechaOperacion;
 
     @NotNull(message = "La hora de operación es obligatoria")
     private LocalTime horaOperacion;

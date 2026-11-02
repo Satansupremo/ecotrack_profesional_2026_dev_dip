@@ -2,8 +2,9 @@ package org.ecotrack_project.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.ecotrack_project.enums.EstadoUsuario;
 import org.ecotrack_project.enums.Rol;
+import org.ecotrack_project.enums.SituacionUsuario;
+import org.ecotrack_project.enums.SituacionVehiculo;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -46,4 +47,8 @@ public class UsuarioEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "rol", nullable = false)
     private Rol rol;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "situacion", nullable = false)
+    private SituacionUsuario situacion;
 }

@@ -28,4 +28,8 @@ public class DetalleEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_programacion", nullable = false)
     private ProgramacionEntity programacion;
+
+    @Column(name = "estado", nullable = false)
+    @Builder.Default
+    private boolean estado = true;
 }

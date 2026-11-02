@@ -32,4 +32,8 @@ public class CargaEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_operario", nullable = false)
     private UsuarioEntity operario;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_transportista", nullable = false)
+    private UsuarioEntity transportista;
 }

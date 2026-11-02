@@ -7,7 +7,6 @@ import org.ecotrack_project.dto.response.PagoInicialDetalleResponse;
 
 public interface PagoInicialService {
 
-    ApiResponse<Integer> registrarPagoInicial(PagoInicialRequest pagoInicialRequest);
     ApiResponse<Integer> registrarPagoInicial(int idSolicitud, PagoInicialRequest request);
     ApiResponse<PagoInicialDetalleResponse> obtenerDetallePagoInicial(int idSolicitud);
     ApiResponse<Integer> confirmarPagoInicial(int idSolicitud);

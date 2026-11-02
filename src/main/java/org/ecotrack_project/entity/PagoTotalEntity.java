@@ -6,6 +6,7 @@ import org.ecotrack_project.enums.EstadoPagoTotal;
 import org.ecotrack_project.enums.TipoVehiculo;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalTime;
 
 @NoArgsConstructor
@@ -24,6 +25,9 @@ public class PagoTotalEntity {
 
     @Column(name = "monto", nullable = false, precision = 12, scale = 2)
     private BigDecimal monto;
+
+    @Column(name = "fecha_operacion", nullable = false)
+    private LocalDate fechaOperacion;
 
     @Column(name = "hora_operacion", nullable = false)
     private LocalTime horaOperacion;

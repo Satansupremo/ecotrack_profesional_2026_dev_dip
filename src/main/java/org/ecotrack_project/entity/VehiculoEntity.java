@@ -2,8 +2,7 @@ package org.ecotrack_project.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.ecotrack_project.enums.EstadoVehiculo;
-import org.ecotrack_project.enums.Rol;
+import org.ecotrack_project.enums.SituacionVehiculo;
 import org.ecotrack_project.enums.TipoVehiculo;
 
 import java.math.BigDecimal;
@@ -44,4 +43,8 @@ public class VehiculoEntity {
 
     @Column(name = "estado", nullable = false)
     private boolean estado;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "situacion", nullable = false)
+    private SituacionVehiculo situacion;
 }

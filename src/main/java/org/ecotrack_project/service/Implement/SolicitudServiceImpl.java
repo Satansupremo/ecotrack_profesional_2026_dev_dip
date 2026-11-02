@@ -5,11 +5,13 @@ import lombok.RequiredArgsConstructor;
 import org.ecotrack_project.dto.request.SolicitudRequest;
 import org.ecotrack_project.dto.response.ApiResponse;
 import org.ecotrack_project.dto.response.SolicitudResponse;
+import org.ecotrack_project.entity.AsignacionCoordinadorEntity;
 import org.ecotrack_project.entity.SolicitudEntity;
 import org.ecotrack_project.entity.UsuarioEntity;
 import org.ecotrack_project.enums.EstadoSolicitud;
 import org.ecotrack_project.enums.Rol;
 import org.ecotrack_project.initialize.Initialize;
+import org.ecotrack_project.repository.AsignacionCoordinadorRepository;
 import org.ecotrack_project.repository.SolicitudRepository;
 import org.ecotrack_project.repository.UsuarioRepository;
 import org.ecotrack_project.service.SolicitudService;
@@ -18,6 +20,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,6 +33,7 @@ public class SolicitudServiceImpl implements SolicitudService {
 
     private final SolicitudRepository solicitudRepository;
     private final UsuarioRepository usuarioRepository;
+    private final AsignacionCoordinadorRepository asignacionCoordinadorRepository;
 
     private Optional<UsuarioEntity> obtenerUsuarioAutenticado() {
         String username = SecurityContextHolder.getContext()
@@ -399,6 +403,365 @@ public class SolicitudServiceImpl implements SolicitudService {
                 response,
                 "Lista de solicitudes PIE obtenida correctamente"
         );
+    }
+
+    @Override
+    public ApiResponse<Integer> obtenerTotalSolicitudesPIConfirmadas() {
+
+        Optional<UsuarioEntity> usuarioOptional = obtenerUsuarioAutenticado();
+
+        if (usuarioOptional.isEmpty() ||
+                (usuarioOptional.get().getRol() != Rol.COORDINADOR &&
+                        usuarioOptional.get().getRol() != Rol.ADMINISTRADOR)) {
+            return ApiResponse.error("Usuario no encontrado o no autorizado");
+        }
+
+        List<EstadoSolicitud> estados = List.of(
+                EstadoSolicitud.PAGO_INICIAL_CONFIRMADO,
+                EstadoSolicitud.EN_VERIFICACION
+        );
+
+        int totalSolicitudes = (int) solicitudRepository.countByEstadoIn(estados);
+
+        return ApiResponse.success(
+                totalSolicitudes,
+                "Total de solicitudes PI confirmadas obtenido correctamente"
+        );
+    }
+
+    @Override
+    public ApiResponse<Integer> obtenerTotalPaginasPIConfirmadas() {
+
+        Optional<UsuarioEntity> usuarioOptional = obtenerUsuarioAutenticado();
+
+        if (usuarioOptional.isEmpty() ||
+                (usuarioOptional.get().getRol() != Rol.COORDINADOR &&
+                        usuarioOptional.get().getRol() != Rol.ADMINISTRADOR)) {
+            return ApiResponse.error("Usuario no encontrado o no autorizado");
+        }
+
+        List<EstadoSolicitud> estados = List.of(
+                EstadoSolicitud.PAGO_INICIAL_CONFIRMADO,
+                EstadoSolicitud.EN_VERIFICACION
+        );
+
+        long totalRegistros = solicitudRepository.countByEstadoIn(estados);
+
+        int totalPaginas = (int) Math.ceil(
+                (double) totalRegistros / Initialize.TAMANIO_PAGINA
+        );
+
+        return ApiResponse.success(
+                totalPaginas,
+                "Total de páginas de solicitudes PI confirmadas obtenido correctamente"
+        );
+    }
+
+    @Override
+    public ApiResponse<List<SolicitudResponse>> listarSolicitudesPIConfirmadas(int pagina) {
+
+        Optional<UsuarioEntity> usuarioOptional = obtenerUsuarioAutenticado();
+
+        if (usuarioOptional.isEmpty() ||
+                (usuarioOptional.get().getRol() != Rol.COORDINADOR &&
+                        usuarioOptional.get().getRol() != Rol.ADMINISTRADOR)) {
+            return ApiResponse.error("Usuario no encontrado o no autorizado");
+        }
+
+        if (pagina < 0) {
+            return ApiResponse.error("El número de página no es válido");
+        }
+
+        List<EstadoSolicitud> estados = List.of(
+                EstadoSolicitud.PAGO_INICIAL_CONFIRMADO,
+                EstadoSolicitud.EN_VERIFICACION
+        );
+
+        Pageable pageable = PageRequest.of(
+                pagina,
+                Initialize.TAMANIO_PAGINA,
+                org.springframework.data.domain.Sort.by(
+                        org.springframework.data.domain.Sort.Direction.ASC,
+                        "fechaRegistro"
+                ).and(
+                        org.springframework.data.domain.Sort.by(
+                                org.springframework.data.domain.Sort.Direction.ASC,
+                                "idSolicitud"
+                        )
+                )
+        );
+
+        Page<SolicitudEntity> solicitudesPage =
+                solicitudRepository.findByEstadoIn(estados, pageable);
+
+        List<SolicitudResponse> response = solicitudesPage.getContent()
+                .stream()
+                .map(this::construirSolicitudPIConfirmada)
+                .collect(Collectors.toList());
+
+        return ApiResponse.success(
+                response,
+                "Lista de solicitudes PI confirmadas obtenida correctamente"
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ApiResponse<SolicitudResponse> obtenerSolicitudPIConfirmada(int idSolicitud) {
+
+        Optional<UsuarioEntity> usuarioOptional = obtenerUsuarioAutenticado();
+
+        if (usuarioOptional.isEmpty()) {
+            return ApiResponse.error("Usuario autenticado no encontrado");
+        }
+
+        UsuarioEntity usuario = usuarioOptional.get();
+
+        if (usuario.getRol() != Rol.COORDINADOR &&
+                usuario.getRol() != Rol.ADMINISTRADOR) {
+            return ApiResponse.error("No tiene permisos para consultar esta solicitud");
+        }
+
+        Optional<SolicitudEntity> solicitudOptional =
+                solicitudRepository.findById(idSolicitud);
+
+        if (solicitudOptional.isEmpty()) {
+            return ApiResponse.error("Solicitud PI confirmada no encontrada");
+        }
+
+        SolicitudEntity solicitud = solicitudOptional.get();
+
+        if (solicitud.getEstado() != EstadoSolicitud.PAGO_INICIAL_CONFIRMADO &&
+                solicitud.getEstado() != EstadoSolicitud.EN_VERIFICACION) {
+            return ApiResponse.error("La solicitud no se encuentra disponible para esta consulta");
+        }
+
+        SolicitudResponse response = construirSolicitudPIConfirmada(solicitud);
+
+        return ApiResponse.success(
+                response,
+                "Solicitud PI confirmada encontrada"
+        );
+    }
+
+
+    @Override
+    public ApiResponse<Integer> obtenerTotalSolicitudesPagoTotal() {
+
+        Optional<UsuarioEntity> usuarioOptional = obtenerUsuarioAutenticado();
+
+        if (usuarioOptional.isEmpty() ||
+                (usuarioOptional.get().getRol() != Rol.COORDINADOR &&
+                        usuarioOptional.get().getRol() != Rol.ADMINISTRADOR)) {
+            return ApiResponse.error("Usuario no encontrado o no autorizado");
+        }
+
+        List<EstadoSolicitud> estados = List.of(
+                EstadoSolicitud.PAGO_TOTAL_EFECTUADO,
+                EstadoSolicitud.PAGO_TOTAL_CONFIRMADO
+        );
+
+        int totalSolicitudes = (int) solicitudRepository.countByEstadoIn(estados);
+
+        return ApiResponse.success(
+                totalSolicitudes,
+                "Total de solicitudes de pago total obtenido correctamente"
+        );
+    }
+
+    @Override
+    public ApiResponse<Integer> obtenerTotalPaginasPagoTotal() {
+
+        Optional<UsuarioEntity> usuarioOptional = obtenerUsuarioAutenticado();
+
+        if (usuarioOptional.isEmpty() ||
+                (usuarioOptional.get().getRol() != Rol.COORDINADOR &&
+                        usuarioOptional.get().getRol() != Rol.ADMINISTRADOR)) {
+            return ApiResponse.error("Usuario no encontrado o no autorizado");
+        }
+
+        List<EstadoSolicitud> estados = List.of(
+                EstadoSolicitud.PAGO_TOTAL_EFECTUADO,
+                EstadoSolicitud.PAGO_TOTAL_CONFIRMADO
+        );
+
+        long totalRegistros = solicitudRepository.countByEstadoIn(estados);
+
+        int totalPaginas = (int) Math.ceil(
+                (double) totalRegistros / Initialize.TAMANIO_PAGINA
+        );
+
+        return ApiResponse.success(
+                totalPaginas,
+                "Total de páginas de solicitudes de pago total obtenido correctamente"
+        );
+    }
+
+    @Override
+    public ApiResponse<List<SolicitudResponse>> listarSolicitudesPagoTotal(int pagina) {
+
+        Optional<UsuarioEntity> usuarioOptional = obtenerUsuarioAutenticado();
+
+        if (usuarioOptional.isEmpty() ||
+                (usuarioOptional.get().getRol() != Rol.COORDINADOR &&
+                        usuarioOptional.get().getRol() != Rol.ADMINISTRADOR)) {
+            return ApiResponse.error("Usuario no encontrado o no autorizado");
+        }
+
+        if (pagina < 0) {
+            return ApiResponse.error("El número de página no es válido");
+        }
+
+        List<EstadoSolicitud> estados = List.of(
+                EstadoSolicitud.PAGO_TOTAL_EFECTUADO,
+                EstadoSolicitud.PAGO_TOTAL_CONFIRMADO
+        );
+
+        Pageable pageable = PageRequest.of(
+                pagina,
+                Initialize.TAMANIO_PAGINA,
+                org.springframework.data.domain.Sort.by(
+                        org.springframework.data.domain.Sort.Direction.ASC,
+                        "fechaRegistro"
+                ).and(
+                        org.springframework.data.domain.Sort.by(
+                                org.springframework.data.domain.Sort.Direction.ASC,
+                                "idSolicitud"
+                        )
+                )
+        );
+
+        Page<SolicitudEntity> solicitudesPage =
+                solicitudRepository.findByEstadoIn(estados, pageable);
+
+        List<SolicitudResponse> response = solicitudesPage.getContent()
+                .stream()
+                .map(this::construirSolicitudPagoTotal)
+                .collect(Collectors.toList());
+
+        return ApiResponse.success(
+                response,
+                "Lista de solicitudes de pago total obtenida correctamente"
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ApiResponse<SolicitudResponse> obtenerSolicitudPagoTotal(int idSolicitud) {
+
+        Optional<UsuarioEntity> usuarioOptional = obtenerUsuarioAutenticado();
+
+        if (usuarioOptional.isEmpty() ||
+                (usuarioOptional.get().getRol() != Rol.COORDINADOR &&
+                        usuarioOptional.get().getRol() != Rol.ADMINISTRADOR)) {
+            return ApiResponse.error("Usuario no encontrado o no autorizado");
+        }
+
+        Optional<SolicitudEntity> solicitudOptional =
+                solicitudRepository.findById(idSolicitud);
+
+        if (solicitudOptional.isEmpty()) {
+            return ApiResponse.error("Solicitud de pago total no encontrada");
+        }
+
+        SolicitudEntity solicitud = solicitudOptional.get();
+
+        if (solicitud.getEstado() != EstadoSolicitud.PAGO_TOTAL_CONFIRMADO) {
+            return ApiResponse.error(
+                    "La solicitud no se encuentra disponible para programar un recojo"
+            );
+        }
+
+        SolicitudResponse response = construirSolicitudPagoTotal(solicitud);
+
+        return ApiResponse.success(
+                response,
+                "Solicitud de pago total encontrada correctamente"
+        );
+    }
+
+    private SolicitudResponse construirSolicitudPagoTotal(
+            SolicitudEntity solicitud) {
+
+        SolicitudResponse.SolicitudResponseBuilder response =
+                SolicitudResponse.builder()
+                        .idSolicitud(solicitud.getIdSolicitud())
+                        .titulo(solicitud.getTitulo())
+                        .descripcion(solicitud.getDescripcion())
+                        .ubicacion(solicitud.getUbicacion())
+                        .fechaRegistro(solicitud.getFechaRegistro())
+                        .fechaFinalizacion(solicitud.getFechaFinalizacion())
+                        .estado(solicitud.getEstado().name())
+                        .nombreUsuario(solicitud.getUsuario().getNombre())
+                        .apellidoUsuario(solicitud.getUsuario().getApellido())
+                        .correo(solicitud.getUsuario().getCorreo())
+                        .celular(solicitud.getUsuario().getCelular());
+
+        Optional<AsignacionCoordinadorEntity> asignacionOptional =
+                asignacionCoordinadorRepository.findBySolicitud_IdSolicitud(
+                        solicitud.getIdSolicitud()
+                );
+
+        if (asignacionOptional.isPresent()) {
+            UsuarioEntity coordinador = asignacionOptional.get().getCoordinador();
+
+            response.idCoordinador(coordinador.getIdUsuario());
+
+            response.nombreCoordinador(
+                    coordinador.getNombre() + " " + coordinador.getApellido()
+            );
+
+            String usernameActual = SecurityContextHolder.getContext()
+                    .getAuthentication().getName();
+
+            response.asignadaAlCoordinadorActual(
+                    coordinador.getUsername().equals(usernameActual)
+            );
+        }
+
+        return response.build();
+    }
+
+    private SolicitudResponse construirSolicitudPIConfirmada(
+            SolicitudEntity solicitud) {
+
+        SolicitudResponse.SolicitudResponseBuilder response =
+                SolicitudResponse.builder()
+                        .idSolicitud(solicitud.getIdSolicitud())
+                        .titulo(solicitud.getTitulo())
+                        .descripcion(solicitud.getDescripcion())
+                        .ubicacion(solicitud.getUbicacion())
+                        .fechaRegistro(solicitud.getFechaRegistro())
+                        .fechaFinalizacion(solicitud.getFechaFinalizacion())
+                        .estado(solicitud.getEstado().name())
+                        .nombreUsuario(solicitud.getUsuario().getNombre())
+                        .apellidoUsuario(solicitud.getUsuario().getApellido())
+                        .correo(solicitud.getUsuario().getCorreo())
+                        .celular(solicitud.getUsuario().getCelular());
+
+        Optional<AsignacionCoordinadorEntity> asignacionOptional =
+                asignacionCoordinadorRepository.findBySolicitud_IdSolicitud(
+                        solicitud.getIdSolicitud()
+                );
+
+        if (asignacionOptional.isPresent()) {
+            UsuarioEntity coordinador = asignacionOptional.get().getCoordinador();
+
+            response.idCoordinador(coordinador.getIdUsuario());
+
+            response.nombreCoordinador(
+                    coordinador.getNombre() + " " + coordinador.getApellido()
+            );
+
+            String usernameActual = SecurityContextHolder.getContext()
+                    .getAuthentication().getName();
+
+            response.asignadaAlCoordinadorActual(
+                    coordinador.getUsername().equals(usernameActual)
+            );
+        }
+
+        return response.build();
     }
 
 }

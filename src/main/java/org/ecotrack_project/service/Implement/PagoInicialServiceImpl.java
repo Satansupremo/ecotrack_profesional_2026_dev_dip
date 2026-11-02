@@ -27,12 +27,6 @@ public class PagoInicialServiceImpl implements PagoInicialService {
     private final NotificacionRepository notificacionRepository;
 
     @Override
-    public ApiResponse<Integer> registrarPagoInicial(PagoInicialRequest pagoInicialRequest) {
-        return null;
-    }
-
-
-    @Override
     @Transactional
     public ApiResponse<Integer> registrarPagoInicial(int idSolicitud, PagoInicialRequest request) {
 
@@ -58,10 +52,6 @@ public class PagoInicialServiceImpl implements PagoInicialService {
 
         AsignacionInicialEntity asignacion = asignacionOptional.get();
 
-        if (request.getMonto().compareTo(asignacion.getMontoAsignadoInicial()) != 0) {
-            return ApiResponse.error("El monto ingresado no coincide con el monto asignado");
-        }
-
         Optional<MedioPagoEntity> medioPagoOptional =
                 medioPagoRepository.findById(request.getIdMedioPago());
 
@@ -71,6 +61,7 @@ public class PagoInicialServiceImpl implements PagoInicialService {
 
         PagoInicialEntity pago = PagoInicialEntity.builder()
                 .monto(asignacion.getMontoAsignadoInicial())
+                .fechaOperacion(request.getFechaOperacion())
                 .horaOperacion(request.getHoraOperacion())
                 .numeroOperacion(request.getNumeroOperacion())
                 .estado(EstadoPagoInicial.PENDIENTE)
@@ -156,8 +147,6 @@ public class PagoInicialServiceImpl implements PagoInicialService {
         );
     }
 
-
-
     @Override
     @Transactional
     public ApiResponse<Integer> confirmarPagoInicial(int idSolicitud) {
@@ -199,6 +188,7 @@ public class PagoInicialServiceImpl implements PagoInicialService {
 
         NotificacionEntity notificacion = NotificacionEntity.builder()
                 .descripcion(
+                        "Código de solicitud: " + solicitud.getIdSolicitud() + "\n\n" +
                         Initialize.MENSAJE_CONFIRMACION_PAGO_INICIAL
                 )
                 .estado(false)
@@ -264,6 +254,7 @@ public class PagoInicialServiceImpl implements PagoInicialService {
 
             NotificacionEntity notificacion = NotificacionEntity.builder()
                     .descripcion(
+                            "Código de solicitud: " + solicitud.getIdSolicitud() + "\n\n" +
                             Initialize.MENSAJE_RECHAZO_PAGO_INICIAL
                                     + request.getDescripcion()
                     )

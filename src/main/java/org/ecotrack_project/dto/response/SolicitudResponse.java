@@ -3,7 +3,6 @@ package org.ecotrack_project.dto.response;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Getter
 @Setter
@@ -19,4 +18,13 @@ public class SolicitudResponse {
     private LocalDateTime fechaRegistro;
     private LocalDateTime fechaFinalizacion;
     private String estado;
+
+    private String nombreUsuario;
+    private String apellidoUsuario;
+    private String correo;
+    private String celular;
+
+    private Integer idCoordinador;
+    private String nombreCoordinador;
+    private boolean asignadaAlCoordinadorActual;
 }

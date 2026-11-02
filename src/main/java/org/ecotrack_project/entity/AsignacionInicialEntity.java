@@ -22,11 +22,14 @@ public class AsignacionInicialEntity {
     @Column(name = "monto_asignado_inicial", nullable = false, precision = 12, scale = 2)
     private BigDecimal montoAsignadoInicial;
 
+    @Column(name = "razon", nullable = false)
+    private String razon;
+
     @Column(name = "fecha_registro", nullable = false)
     private LocalDateTime fechaRegistro;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_solicitud", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_solicitud", nullable = false, unique = true)
     private SolicitudEntity solicitud;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

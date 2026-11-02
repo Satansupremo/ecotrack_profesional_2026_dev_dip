@@ -161,4 +161,100 @@ public class SolicitudController {
         return ResponseEntity.badRequest().body(response);
     }
 
+// SOLICITUDES PI CONFIRMADAS
+
+    @GetMapping("/pi-confirmadas/total")
+    public ResponseEntity<ApiResponse<Integer>> obtenerTotalSolicitudesPIConfirmadas() {
+
+        var response = solicitudService.obtenerTotalSolicitudesPIConfirmadas();
+
+        if (response.isSuccess())
+            return ResponseEntity.ok(response);
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping("/pi-confirmadas/paginas")
+    public ResponseEntity<ApiResponse<Integer>> obtenerTotalPaginasPIConfirmadas() {
+
+        var response = solicitudService.obtenerTotalPaginasPIConfirmadas();
+
+        if (response.isSuccess())
+            return ResponseEntity.ok(response);
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping("/pi-confirmadas/listar")
+    public ResponseEntity<ApiResponse<List<SolicitudResponse>>> listarSolicitudesPIConfirmadas(
+            @RequestParam(defaultValue = "0") int pagina) {
+
+        var response = solicitudService.listarSolicitudesPIConfirmadas(pagina);
+
+        if (response.isSuccess())
+            return ResponseEntity.ok(response);
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping("/pi-confirmadas/buscar/{idSolicitud}")
+    public ResponseEntity<ApiResponse<SolicitudResponse>> obtenerSolicitudPIConfirmada(
+            @PathVariable int idSolicitud) {
+
+        var response = solicitudService.obtenerSolicitudPIConfirmada(idSolicitud);
+
+        if (response.isSuccess())
+            return ResponseEntity.ok(response);
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
+
+    // SOLICITUDES PAGO TOTAL
+
+    @GetMapping("/pago-total/total")
+    public ResponseEntity<ApiResponse<Integer>> obtenerTotalSolicitudesPagoTotal() {
+
+        var response = solicitudService.obtenerTotalSolicitudesPagoTotal();
+
+        if (response.isSuccess())
+            return ResponseEntity.ok(response);
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping("/pago-total/paginas")
+    public ResponseEntity<ApiResponse<Integer>> obtenerTotalPaginasPagoTotal() {
+
+        var response = solicitudService.obtenerTotalPaginasPagoTotal();
+
+        if (response.isSuccess())
+            return ResponseEntity.ok(response);
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping("/pago-total/listar")
+    public ResponseEntity<ApiResponse<List<SolicitudResponse>>> listarSolicitudesPagoTotal(
+            @RequestParam(defaultValue = "0") int pagina) {
+
+        var response = solicitudService.listarSolicitudesPagoTotal(pagina);
+
+        if (response.isSuccess())
+            return ResponseEntity.ok(response);
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping("/pago-total/buscar/{idSolicitud}")
+    public ResponseEntity<ApiResponse<SolicitudResponse>> obtenerSolicitudPagoTotal(
+            @PathVariable int idSolicitud) {
+
+        var response = solicitudService.obtenerSolicitudPagoTotal(idSolicitud);
+
+        if (response.isSuccess())
+            return ResponseEntity.ok(response);
+
+        return ResponseEntity.badRequest().body(response);
+    }
 }

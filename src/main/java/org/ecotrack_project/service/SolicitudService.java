@@ -23,4 +23,15 @@ public interface SolicitudService {
     ApiResponse<Integer> obtenerTotalSolicitudesPIE();
     ApiResponse<Integer> obtenerTotalPaginasPIE();
     ApiResponse<List<SolicitudResponse>> listarSolicitudesPIE(int pagina);
+
+    ApiResponse<Integer> obtenerTotalSolicitudesPIConfirmadas();
+    ApiResponse<Integer> obtenerTotalPaginasPIConfirmadas();
+    ApiResponse<List<SolicitudResponse>> listarSolicitudesPIConfirmadas(int pagina);
+    ApiResponse<SolicitudResponse> obtenerSolicitudPIConfirmada(int idSolicitud);
+
+    ApiResponse<Integer> obtenerTotalSolicitudesPagoTotal();
+    ApiResponse<Integer> obtenerTotalPaginasPagoTotal();
+    ApiResponse<List<SolicitudResponse>> listarSolicitudesPagoTotal(int pagina);
+
+    ApiResponse<SolicitudResponse> obtenerSolicitudPagoTotal(int idSolicitud);
 }

@@ -17,16 +17,19 @@ public class RecomendacionEntity {
     @Column(name = "id_recomendacion")
     private int idRecomendacion;
 
-    @Column(name = "recomendacion_equipo", columnDefinition = "TEXT")
-    private String recomendacionEquipo;
+    @Column(name = "cantidad_unidades", nullable = false)
+    private int cantidadUnidades;
 
-    @Column(name = "recomendacion_vehiculo", columnDefinition = "TEXT")
-    private String recomendacionVehiculo;
+    @Column(name = "razon_cantidad_unidades", columnDefinition = "TEXT")
+    private String razonCantidadUnidades;
 
-    @Column(name = "recomendacion_otro", columnDefinition = "TEXT")
-    private String recomendacionOtro;
+    @Column(name = "equipo_seguridad", columnDefinition = "TEXT")
+    private String equipoSeguridad;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_programacion", nullable = false)
-    private ProgramacionEntity programacion;
+    @Column(name = "otras_recomendaciones", columnDefinition = "TEXT")
+    private String otrasRecomendaciones;
+
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_solicitud", nullable = false, unique = true)
+    private SolicitudEntity solicitud;
 }

@@ -11,7 +11,6 @@ import java.util.Optional;
 @Repository
 public interface PagoInicialRepository extends JpaRepository<PagoInicialEntity, Integer> {
 
-    Optional<PagoInicialEntity> findBySolicitud_IdSolicitud(int idSolicitud);
     Optional<PagoInicialEntity> findBySolicitud_IdSolicitudAndEstado(int idSolicitud, EstadoPagoInicial estado);
     long countBySolicitud_IdSolicitud(int idSolicitud);
 }
