@@ -4,6 +4,7 @@ package org.ecotrack_project.service.Implement;
 import jakarta.transaction.Transactional;
 import org.ecotrack_project.dto.request.ProgramacionRequest;
 import org.ecotrack_project.dto.response.ApiResponse;
+import org.ecotrack_project.dto.response.ColaResponse;
 import org.ecotrack_project.dto.response.ProgramacionResponse;
 import org.ecotrack_project.dto.response.UnidadProgramacionResponse;
 import org.ecotrack_project.entity.*;
@@ -41,13 +42,21 @@ public class ProgramacionServiceImpl implements ProgramacionService {
     private final NotificacionRepository notificacionRepository;
     private final DetalleRepository detalleRepository;
     private final VehiculoRepository vehiculoRepository;
+    private final ColaRepository colaRepository;
+    private final LiberacionRecursosService liberacionRecursosService;
+    private final CargaRepository cargaRepository;
 
     public ProgramacionServiceImpl(
             ProgramacionRepository programacionRepository,
             SolicitudRepository solicitudRepository,
             UsuarioRepository usuarioRepository,
             RecomendacionRepository recomendacionRepository,
-            NotificacionRepository notificacionRepository, DetalleRepository detalleRepository, VehiculoRepository vehiculoRepository
+            NotificacionRepository notificacionRepository,
+            DetalleRepository detalleRepository,
+            VehiculoRepository vehiculoRepository,
+            ColaRepository colaRepository,
+            LiberacionRecursosService liberacionRecursosService,
+            CargaRepository cargaRepository
     ) {
         this.programacionRepository = programacionRepository;
         this.solicitudRepository = solicitudRepository;
@@ -56,6 +65,9 @@ public class ProgramacionServiceImpl implements ProgramacionService {
         this.notificacionRepository = notificacionRepository;
         this.vehiculoRepository = vehiculoRepository;
         this.detalleRepository = detalleRepository;
+        this.colaRepository = colaRepository;
+        this.liberacionRecursosService = liberacionRecursosService;
+        this.cargaRepository = cargaRepository;
     }
 
     @Override
@@ -205,10 +217,7 @@ public class ProgramacionServiceImpl implements ProgramacionService {
 
     @Override
     @Transactional
-    public ApiResponse<List<ProgramacionResponse>> listarProgramacionesPorFecha(
-            LocalDate fecha,
-            int pagina
-    ) {
+    public ApiResponse<List<ProgramacionResponse>> listarProgramacionesPorFecha(LocalDate fecha, int pagina) {
 
         if (fecha == null) {
             return ApiResponse.error("La fecha de ejecución es obligatoria");
@@ -250,9 +259,7 @@ public class ProgramacionServiceImpl implements ProgramacionService {
 
     @Override
     @Transactional
-    public ApiResponse<ProgramacionResponse> obtenerDetalleProgramacion(
-            int idProgramacion
-    ) {
+    public ApiResponse<ProgramacionResponse> obtenerDetalleProgramacion(int idProgramacion) {
 
         Optional<ProgramacionEntity> programacionOptional =
                 programacionRepository.findById(idProgramacion);
@@ -284,12 +291,23 @@ public class ProgramacionServiceImpl implements ProgramacionService {
         long total;
 
         if (usuario.getRol() == Rol.JEFE_UNIDAD) {
+
             total = programacionRepository.countByJefeUnidad_IdUsuario(
                     usuario.getIdUsuario()
             );
+
+        } else if (usuario.getRol() == Rol.TRANSPORTISTA) {
+
+            total = programacionRepository.countByTransportistaAsignado(
+                    usuario.getIdUsuario()
+            );
+
         } else if (usuario.getRol() == Rol.ADMINISTRADOR) {
+
             total = programacionRepository.count();
+
         } else {
+
             return ApiResponse.error(
                     "No tiene permisos para consultar las programaciones"
             );
@@ -315,12 +333,23 @@ public class ProgramacionServiceImpl implements ProgramacionService {
         long total;
 
         if (usuario.getRol() == Rol.JEFE_UNIDAD) {
+
             total = programacionRepository.countByJefeUnidad_IdUsuario(
                     usuario.getIdUsuario()
             );
+
+        } else if (usuario.getRol() == Rol.TRANSPORTISTA) {
+
+            total = programacionRepository.countByTransportistaAsignado(
+                    usuario.getIdUsuario()
+            );
+
         } else if (usuario.getRol() == Rol.ADMINISTRADOR) {
+
             total = programacionRepository.count();
+
         } else {
+
             return ApiResponse.error(
                     "No tiene permisos para consultar las programaciones"
             );
@@ -353,7 +382,9 @@ public class ProgramacionServiceImpl implements ProgramacionService {
         UsuarioEntity usuario = usuarioOptional.get();
 
         if (usuario.getRol() != Rol.JEFE_UNIDAD &&
+                usuario.getRol() != Rol.TRANSPORTISTA &&
                 usuario.getRol() != Rol.ADMINISTRADOR) {
+
             return ApiResponse.error(
                     "No tiene permisos para consultar las programaciones"
             );
@@ -371,12 +402,21 @@ public class ProgramacionServiceImpl implements ProgramacionService {
         Page<ProgramacionEntity> programaciones;
 
         if (usuario.getRol() == Rol.JEFE_UNIDAD) {
-            programaciones = programacionRepository
-                    .findByJefeUnidad_IdUsuario(
-                            usuario.getIdUsuario(),
-                            pageable
-                    );
+
+            programaciones = programacionRepository.findByJefeUnidad_IdUsuario(
+                    usuario.getIdUsuario(),
+                    pageable
+            );
+
+        } else if (usuario.getRol() == Rol.TRANSPORTISTA) {
+
+            programaciones = programacionRepository.findByTransportistaAsignado(
+                    usuario.getIdUsuario(),
+                    pageable
+            );
+
         } else {
+
             programaciones = programacionRepository.findAll(pageable);
         }
 
@@ -394,9 +434,171 @@ public class ProgramacionServiceImpl implements ProgramacionService {
 
     @Override
     @Transactional
-    public ApiResponse<List<UnidadProgramacionResponse>> listarUnidadesProgramacion(
-            int idProgramacion
-    ) {
+    public ApiResponse<Integer> obtenerTotalProgramacionesEjecutadas() {
+
+        Optional<UsuarioEntity> usuarioOptional = obtenerUsuarioAutenticado();
+
+        if (usuarioOptional.isEmpty()) {
+            return ApiResponse.error("No se pudo identificar al usuario autenticado");
+        }
+
+        Rol rol = usuarioOptional.get().getRol();
+
+        if (rol != Rol.OPERARIO && rol != Rol.ADMINISTRADOR) {
+            return ApiResponse.error(
+                    "No tiene permisos para consultar las programaciones ejecutadas"
+            );
+        }
+
+        List<EstadoProgramacion> estados = List.of(
+                EstadoProgramacion.EJECUTANDO,
+                EstadoProgramacion.POR_FINALIZAR
+        );
+
+        long total = programacionRepository.countByEstadoIn(estados);
+
+        return ApiResponse.success(
+                (int) total,
+                "Total de programaciones ejecutadas obtenido correctamente"
+        );
+    }
+
+    @Override
+    @Transactional
+    public ApiResponse<Integer> obtenerTotalPaginasProgramacionesEjecutadas() {
+
+        Optional<UsuarioEntity> usuarioOptional = obtenerUsuarioAutenticado();
+
+        if (usuarioOptional.isEmpty()) {
+            return ApiResponse.error("No se pudo identificar al usuario autenticado");
+        }
+
+        Rol rol = usuarioOptional.get().getRol();
+
+        if (rol != Rol.OPERARIO && rol != Rol.ADMINISTRADOR) {
+            return ApiResponse.error(
+                    "No tiene permisos para consultar las programaciones ejecutadas"
+            );
+        }
+
+        List<EstadoProgramacion> estados = List.of(
+                EstadoProgramacion.EJECUTANDO,
+                EstadoProgramacion.POR_FINALIZAR
+        );
+
+        long total = programacionRepository.countByEstadoIn(estados);
+
+        int paginas = (int) Math.ceil(
+                (double) total / Initialize.TAMANIO_PAGINA
+        );
+
+        return ApiResponse.success(
+                paginas,
+                "Total de páginas obtenido correctamente"
+        );
+    }
+
+    @Override
+    @Transactional
+    public ApiResponse<Integer> obtenerTotalMisProgramacionesAsignadas() {
+
+        Optional<UsuarioEntity> usuarioOptional = obtenerUsuarioAutenticado();
+
+        if (usuarioOptional.isEmpty()) {
+            return ApiResponse.error("No se pudo identificar al usuario autenticado");
+        }
+
+        UsuarioEntity usuario = usuarioOptional.get();
+        long total;
+
+        if (usuario.getRol() == Rol.JEFE_UNIDAD) {
+
+            total = programacionRepository.countByJefeUnidad_IdUsuarioAndEstado(
+                    usuario.getIdUsuario(),
+                    EstadoProgramacion.ASIGNADO
+            );
+
+        } else if (usuario.getRol() == Rol.TRANSPORTISTA) {
+
+            total = programacionRepository.countByTransportistaAsignadoAndEstado(
+                    usuario.getIdUsuario(),
+                    EstadoProgramacion.ASIGNADO
+            );
+
+        } else if (usuario.getRol() == Rol.ADMINISTRADOR) {
+
+            total = programacionRepository.countByEstado(
+                    EstadoProgramacion.ASIGNADO
+            );
+
+        } else {
+
+            return ApiResponse.error(
+                    "No tiene permisos para consultar las programaciones asignadas"
+            );
+        }
+
+        return ApiResponse.success(
+                (int) total,
+                "Total de programaciones asignadas obtenido correctamente"
+        );
+    }
+
+    @Override
+    @Transactional
+    public ApiResponse<List<ProgramacionResponse>> listarProgramacionesEjecutadas(int pagina) {
+
+        if (pagina < 0) {
+            return ApiResponse.error("El número de página no es válido");
+        }
+
+        Optional<UsuarioEntity> usuarioOptional = obtenerUsuarioAutenticado();
+
+        if (usuarioOptional.isEmpty()) {
+            return ApiResponse.error("No se pudo identificar al usuario autenticado");
+        }
+
+        Rol rol = usuarioOptional.get().getRol();
+
+        if (rol != Rol.OPERARIO && rol != Rol.ADMINISTRADOR) {
+            return ApiResponse.error(
+                    "No tiene permisos para consultar las programaciones ejecutadas"
+            );
+        }
+
+        List<EstadoProgramacion> estados = List.of(
+                EstadoProgramacion.EJECUTANDO,
+                EstadoProgramacion.POR_FINALIZAR
+        );
+
+        Pageable pageable = PageRequest.of(
+                pagina,
+                Initialize.TAMANIO_PAGINA,
+                Sort.by(
+                        Sort.Order.asc("fechaEjecucion"),
+                        Sort.Order.asc("idProgramacion")
+                )
+        );
+
+        Page<ProgramacionEntity> programaciones =
+                programacionRepository.findByEstadoIn(estados, pageable);
+
+        List<ProgramacionResponse> respuestas = programaciones
+                .getContent()
+                .stream()
+                .map(this::convertirAResponse)
+                .toList();
+
+        return ApiResponse.success(
+                respuestas,
+                "Programaciones ejecutadas obtenidas correctamente"
+        );
+    }
+
+
+    @Override
+    @Transactional
+    public ApiResponse<List<UnidadProgramacionResponse>> listarUnidadesProgramacion(int idProgramacion) {
 
         Optional<UsuarioEntity> usuarioOptional = obtenerUsuarioAutenticado();
 
@@ -411,15 +613,27 @@ public class ProgramacionServiceImpl implements ProgramacionService {
             return ApiResponse.error("Programación no encontrada");
         }
 
-        ProgramacionEntity programacion = programacionOptional.get();
         UsuarioEntity usuario = usuarioOptional.get();
+        ProgramacionEntity programacion = programacionOptional.get();
 
-        if (!tienePermisoGestionarProgramacion(usuario, programacion)) {
+        if (!tienePermisoConsultarProgramacion(usuario, programacion)) {
             return ApiResponse.error("No tiene permisos para consultar esta programación");
         }
 
-        List<UnidadProgramacionResponse> unidades = detalleRepository
-                .findByProgramacion_IdProgramacionAndEstadoTrueOrderByIdDetalleAsc(idProgramacion)
+        List<DetalleEntity> detalles;
+
+        if (usuario.getRol() == Rol.TRANSPORTISTA) {
+            detalles = detalleRepository
+                    .findByProgramacion_IdProgramacionAndTransportista_IdUsuarioAndEstadoTrueOrderByIdDetalleAsc(
+                            idProgramacion,
+                            usuario.getIdUsuario()
+                    );
+        } else {
+            detalles = detalleRepository
+                    .findByProgramacion_IdProgramacionAndEstadoTrueOrderByIdDetalleAsc(idProgramacion);
+        }
+
+        List<UnidadProgramacionResponse> unidades = detalles
                 .stream()
                 .map(this::convertirAUnidadResponse)
                 .toList();
@@ -432,10 +646,7 @@ public class ProgramacionServiceImpl implements ProgramacionService {
 
     @Override
     @Transactional
-    public ApiResponse<UnidadProgramacionResponse> agregarUnidadProgramacion(
-            int idProgramacion,
-            TipoVehiculo tipo
-    ) {
+    public ApiResponse<UnidadProgramacionResponse> agregarUnidadProgramacion(int idProgramacion, TipoVehiculo tipo) {
 
         if (tipo == null) {
             return ApiResponse.error("Debe seleccionar un tipo de vehículo");
@@ -464,6 +675,41 @@ public class ProgramacionServiceImpl implements ProgramacionService {
         if (programacion.getEstado() != EstadoProgramacion.ASIGNADO) {
             return ApiResponse.error(
                     "No se pueden agregar unidades a una programación que ya fue ejecutada"
+            );
+        }
+
+        if (programacion.getFechaEjecucion() == null) {
+            return ApiResponse.error(
+                    "La programación debe tener una fecha de ejecución antes de asignar unidades"
+            );
+        }
+
+        Optional<RecomendacionEntity> recomendacionOptional =
+                recomendacionRepository.findBySolicitud_IdSolicitud(
+                        programacion.getSolicitud().getIdSolicitud()
+                );
+
+        if (recomendacionOptional.isEmpty()) {
+            return ApiResponse.error(
+                    "No se encontró la recomendación de la solicitud"
+            );
+        }
+
+        int cantidadRecomendada =
+                recomendacionOptional.get().getCantidadUnidades();
+
+        if (cantidadRecomendada <= 0) {
+            return ApiResponse.error(
+                    "La cantidad de unidades recomendadas no es válida"
+            );
+        }
+
+        long unidadesAsignadas = detalleRepository
+                .countByProgramacion_IdProgramacionAndEstadoTrue(idProgramacion);
+
+        if (unidadesAsignadas >= cantidadRecomendada) {
+            return ApiResponse.error(
+                    "Ya se alcanzó la cantidad de unidades recomendadas para esta programación"
             );
         }
 
@@ -498,6 +744,16 @@ public class ProgramacionServiceImpl implements ProgramacionService {
 
         DetalleEntity detalleGuardado = detalleRepository.save(detalle);
 
+        String mensaje = "Se te ha asignado una unidad para la programación de la solicitud N.° "
+                + programacion.getSolicitud().getIdSolicitud()
+                + ", programada para el "
+                + programacion.getFechaEjecucion().format(
+                DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        )
+                + ". Consulta los detalles de tu programación para obtener más información.";
+
+        notificarTransportista(transportista, mensaje);
+
         return ApiResponse.success(
                 convertirAUnidadResponse(detalleGuardado),
                 "Unidad agregada correctamente a la programación"
@@ -506,10 +762,7 @@ public class ProgramacionServiceImpl implements ProgramacionService {
 
     @Override
     @Transactional
-    public ApiResponse<Integer> eliminarUnidadProgramacion(
-            int idProgramacion,
-            int idDetalle
-    ) {
+    public ApiResponse<Integer> eliminarUnidadProgramacion(int idProgramacion, int idDetalle) {
 
         Optional<UsuarioEntity> usuarioOptional = obtenerUsuarioAutenticado();
 
@@ -597,10 +850,12 @@ public class ProgramacionServiceImpl implements ProgramacionService {
             return ApiResponse.error("La programación ya fue ejecutada o no está disponible");
         }
 
-        boolean tieneUnidades = detalleRepository
-                .existsByProgramacion_IdProgramacionAndEstadoTrue(idProgramacion);
+        List<DetalleEntity> detalles = detalleRepository
+                .findByProgramacion_IdProgramacionAndEstadoTrueOrderByIdDetalleAsc(
+                        idProgramacion
+                );
 
-        if (!tieneUnidades) {
+        if (detalles.isEmpty()) {
             return ApiResponse.error(
                     "Debe agregar al menos una unidad antes de ejecutar la programación"
             );
@@ -609,6 +864,18 @@ public class ProgramacionServiceImpl implements ProgramacionService {
         programacion.setEstado(EstadoProgramacion.EJECUTANDO);
 
         programacionRepository.save(programacion);
+
+        String mensaje = "La programación de la solicitud N.° "
+                + programacion.getSolicitud().getIdSolicitud()
+                + " ha sido ejecutada. La fecha programada para el recojo es el "
+                + programacion.getFechaEjecucion().format(
+                DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        )
+                + ". Consulta los detalles de tu programación para obtener más información.";
+
+        detalles.forEach(detalle ->
+                notificarTransportista(detalle.getTransportista(), mensaje)
+        );
 
         return ApiResponse.success(
                 idProgramacion,
@@ -636,7 +903,7 @@ public class ProgramacionServiceImpl implements ProgramacionService {
         UsuarioEntity usuario = usuarioOptional.get();
         ProgramacionEntity programacion = programacionOptional.get();
 
-        if (!tienePermisoGestionarProgramacion(usuario, programacion)) {
+        if (!tienePermisoConsultarProgramacion(usuario, programacion)) {
             return ApiResponse.error("No tiene permisos para consultar esta programación");
         }
 
@@ -647,6 +914,194 @@ public class ProgramacionServiceImpl implements ProgramacionService {
                 "Detalle de programación obtenido correctamente"
         );
     }
+
+
+    @Override
+    @Transactional
+    public ApiResponse<Integer> registrarSalida(int idProgramacion, int idDetalle) {
+
+        Optional<UsuarioEntity> usuarioOptional = obtenerUsuarioAutenticado();
+
+        if (usuarioOptional.isEmpty()) {
+            return ApiResponse.error("No se pudo identificar al usuario autenticado");
+        }
+
+        Optional<ProgramacionEntity> programacionOptional =
+                programacionRepository.findByIdForUpdate(idProgramacion);
+
+        if (programacionOptional.isEmpty()) {
+            return ApiResponse.error("Programación no encontrada");
+        }
+
+        ProgramacionEntity programacion = programacionOptional.get();
+        UsuarioEntity usuario = usuarioOptional.get();
+
+        if (!tienePermisoGestionarProgramacion(usuario, programacion)) {
+            return ApiResponse.error("No tiene permisos para gestionar esta programación");
+        }
+
+        if (programacion.getEstado() != EstadoProgramacion.EJECUTANDO) {
+            return ApiResponse.error(
+                    "Solo se pueden registrar salidas en programaciones en ejecución"
+            );
+        }
+
+        Optional<DetalleEntity> detalleOptional =
+                detalleRepository.findByIdDetalleAndProgramacion_IdProgramacionAndEstadoTrue(
+                        idDetalle,
+                        idProgramacion
+                );
+
+        if (detalleOptional.isEmpty()) {
+            return ApiResponse.error(
+                    "La unidad seleccionada no pertenece a esta programación o no está activa"
+            );
+        }
+
+        if (colaRepository.existsByDetalle_IdDetalleAndEstadoTrue(idDetalle)) {
+            return ApiResponse.error(
+                    "Esta unidad ya tiene una salida pendiente de recepción"
+            );
+        }
+
+        ColaEntity cola = ColaEntity.builder()
+                .fechaRegistro(LocalDateTime.now())
+                .estado(true)
+                .detalle(detalleOptional.get())
+                .build();
+
+        ColaEntity colaGuardada = colaRepository.save(cola);
+
+        return ApiResponse.success(
+                colaGuardada.getIdCola(),
+                "Salida registrada correctamente"
+        );
+    }
+
+    @Override
+    @Transactional
+    public ApiResponse<List<ColaResponse>> listarSalidasPendientes(int idProgramacion) {
+
+        Optional<UsuarioEntity> usuarioOptional = obtenerUsuarioAutenticado();
+
+        if (usuarioOptional.isEmpty()) {
+            return ApiResponse.error("No se pudo identificar al usuario autenticado");
+        }
+
+        Optional<ProgramacionEntity> programacionOptional =
+                programacionRepository.findById(idProgramacion);
+
+        if (programacionOptional.isEmpty()) {
+            return ApiResponse.error("Programación no encontrada");
+        }
+
+        UsuarioEntity usuario = usuarioOptional.get();
+        ProgramacionEntity programacion = programacionOptional.get();
+
+        boolean autorizado =
+                usuario.getRol() == Rol.ADMINISTRADOR
+                        || usuario.getRol() == Rol.OPERARIO
+                        || (usuario.getRol() == Rol.JEFE_UNIDAD
+                        && programacion.getJefeUnidad().getIdUsuario() == usuario.getIdUsuario());
+
+        if (!autorizado) {
+            return ApiResponse.error(
+                    "No tiene permisos para consultar las salidas pendientes"
+            );
+        }
+
+        List<ColaResponse> salidas = colaRepository
+                .findByDetalle_Programacion_IdProgramacionAndEstadoTrueOrderByFechaRegistroAscIdColaAsc(
+                        idProgramacion
+                )
+                .stream()
+                .map(this::convertirAColaResponse)
+                .toList();
+
+        return ApiResponse.success(
+                salidas,
+                "Salidas pendientes obtenidas correctamente"
+        );
+    }
+
+    @Override
+    @Transactional
+    public ApiResponse<Integer> finalizarProgramacion(int idProgramacion) {
+
+        Optional<UsuarioEntity> usuarioOptional = obtenerUsuarioAutenticado();
+
+        if (usuarioOptional.isEmpty()) {
+            return ApiResponse.error("No se pudo identificar al usuario autenticado");
+        }
+
+        Optional<ProgramacionEntity> programacionOptional =
+                programacionRepository.findByIdForUpdate(idProgramacion);
+
+        if (programacionOptional.isEmpty()) {
+            return ApiResponse.error("Programación no encontrada");
+        }
+
+        ProgramacionEntity programacion = programacionOptional.get();
+        UsuarioEntity usuario = usuarioOptional.get();
+
+        if (!tienePermisoGestionarProgramacion(usuario, programacion)) {
+            return ApiResponse.error(
+                    "No tiene permisos para finalizar esta programación"
+            );
+        }
+
+        if (programacion.getEstado() != EstadoProgramacion.EJECUTANDO) {
+            return ApiResponse.error(
+                    "Solo se pueden finalizar programaciones en ejecución"
+            );
+        }
+
+        long totalSalidas = colaRepository
+                .countByDetalle_Programacion_IdProgramacion(idProgramacion);
+
+        if (totalSalidas == 0) {
+            return ApiResponse.error(
+                    "No se puede finalizar una programación sin salidas registradas"
+            );
+        }
+
+        long salidasPendientes = colaRepository
+                .countByDetalle_Programacion_IdProgramacionAndEstadoTrue(idProgramacion);
+
+        long totalCargas = cargaRepository
+                .countByProgramacion_IdProgramacion(idProgramacion);
+
+        if (salidasPendientes > 0 || totalCargas < totalSalidas) {
+
+            programacion.setEstado(EstadoProgramacion.POR_FINALIZAR);
+
+            programacionRepository.save(programacion);
+
+            long cargasPendientes = totalSalidas - totalCargas;
+
+            return ApiResponse.success(
+                    idProgramacion,
+                    "Se solicitó finalizar la programación. "
+                            + "Salidas pendientes de recepción: "
+                            + salidasPendientes
+                            + ". Cargas pendientes de registro: "
+                            + cargasPendientes
+            );
+        }
+
+        programacion.setEstado(EstadoProgramacion.FINALIZADO);
+        programacion.setFechaFinalizacion(LocalDateTime.now());
+
+        liberacionRecursosService.liberarRecursos(idProgramacion);
+
+        programacionRepository.save(programacion);
+
+        return ApiResponse.success(
+                idProgramacion,
+                "Programación finalizada correctamente"
+        );
+    }
+
 
 
     private Optional<UsuarioEntity> seleccionarJefeUnidad(LocalDate fechaEjecucion) {
@@ -780,6 +1235,11 @@ public class ProgramacionServiceImpl implements ProgramacionService {
                                 ? recomendacion.getCantidadUnidades()
                                 : null
                 )
+                .cantidadSalidasPendientes(
+                        (int) colaRepository.countByDetalle_Programacion_IdProgramacionAndEstadoTrue(
+                                programacion.getIdProgramacion()
+                        )
+                )
                 .razonCantidadUnidades(
                         recomendacion != null
                                 ? recomendacion.getRazonCantidadUnidades()
@@ -825,10 +1285,7 @@ public class ProgramacionServiceImpl implements ProgramacionService {
                 ));
     }
 
-    private boolean tienePermisoGestionarProgramacion(
-            UsuarioEntity usuario,
-            ProgramacionEntity programacion
-    ) {
+    private boolean tienePermisoGestionarProgramacion(UsuarioEntity usuario, ProgramacionEntity programacion) {
 
         if (usuario.getRol() == Rol.ADMINISTRADOR) {
             return true;
@@ -858,4 +1315,60 @@ public class ProgramacionServiceImpl implements ProgramacionService {
                 .build();
     }
 
+    private boolean tienePermisoConsultarProgramacion(
+            UsuarioEntity usuario,
+            ProgramacionEntity programacion
+    ) {
+
+        if (usuario.getRol() == Rol.ADMINISTRADOR) {
+            return true;
+        }
+
+        if (usuario.getRol() == Rol.JEFE_UNIDAD) {
+            return programacion.getJefeUnidad() != null
+                    && programacion.getJefeUnidad().getIdUsuario() == usuario.getIdUsuario();
+        }
+
+        if (usuario.getRol() == Rol.TRANSPORTISTA) {
+            return detalleRepository
+                    .existsByProgramacion_IdProgramacionAndTransportista_IdUsuarioAndEstadoTrue(
+                            programacion.getIdProgramacion(),
+                            usuario.getIdUsuario()
+                    );
+        }
+
+        return false;
+    }
+
+    private void notificarTransportista(UsuarioEntity transportista, String mensaje) {
+
+        NotificacionEntity notificacion = NotificacionEntity.builder()
+                .descripcion(mensaje)
+                .estado(false)
+                .usuario(transportista)
+                .build();
+
+        notificacionRepository.save(notificacion);
+    }
+
+    private ColaResponse convertirAColaResponse(ColaEntity cola) {
+
+        DetalleEntity detalle = cola.getDetalle();
+        UsuarioEntity transportista = detalle.getTransportista();
+        VehiculoEntity vehiculo = detalle.getVehiculo();
+
+        return ColaResponse.builder()
+                .idCola(cola.getIdCola())
+                .fechaRegistro(cola.getFechaRegistro())
+                .estado(cola.isEstado())
+                .idProgramacion(detalle.getProgramacion().getIdProgramacion())
+                .idDetalle(detalle.getIdDetalle())
+                .idTransportista(transportista.getIdUsuario())
+                .nombreTransportista(transportista.getNombre())
+                .apellidoTransportista(transportista.getApellido())
+                .idVehiculo(vehiculo.getIdVehiculo())
+                .placaVehiculo(vehiculo.getPlaca())
+                .tipoVehiculo(vehiculo.getTipo().name())
+                .build();
+    }
 }

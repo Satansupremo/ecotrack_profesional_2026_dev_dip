@@ -2,6 +2,7 @@ package org.ecotrack_project.repository;
 
 import jakarta.persistence.LockModeType;
 import org.ecotrack_project.entity.ProgramacionEntity;
+import org.ecotrack_project.enums.EstadoProgramacion;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -39,5 +41,74 @@ public interface ProgramacionRepository extends JpaRepository<ProgramacionEntity
     @Query("SELECT p FROM ProgramacionEntity p WHERE p.idProgramacion = :idProgramacion")
     Optional<ProgramacionEntity> findByIdForUpdate(
             @Param("idProgramacion") int idProgramacion
+    );
+    @Query("""
+    SELECT COUNT(p)
+    FROM ProgramacionEntity p
+    WHERE EXISTS (
+        SELECT d.idDetalle
+        FROM DetalleEntity d
+        WHERE d.programacion = p
+        AND d.transportista.idUsuario = :idTransportista
+        AND d.estado = true
+    )
+""")
+    long countByTransportistaAsignado(
+            @Param("idTransportista") int idTransportista
+    );
+
+    @Query(
+            value = """
+        SELECT p
+        FROM ProgramacionEntity p
+        WHERE EXISTS (
+            SELECT d.idDetalle
+            FROM DetalleEntity d
+            WHERE d.programacion = p
+            AND d.transportista.idUsuario = :idTransportista
+            AND d.estado = true
+        )
+    """,
+            countQuery = """
+        SELECT COUNT(p)
+        FROM ProgramacionEntity p
+        WHERE EXISTS (
+            SELECT d.idDetalle
+            FROM DetalleEntity d
+            WHERE d.programacion = p
+            AND d.transportista.idUsuario = :idTransportista
+            AND d.estado = true
+        )
+    """
+    )
+    Page<ProgramacionEntity> findByTransportistaAsignado(
+            @Param("idTransportista") int idTransportista,
+            Pageable pageable
+    );
+
+    long countByEstadoIn(List<EstadoProgramacion> estados);
+    Page<ProgramacionEntity> findByEstadoIn(List<EstadoProgramacion> estados, Pageable pageable);
+    long countByJefeUnidad_IdUsuarioAndEstado(
+            int idJefeUnidad,
+            EstadoProgramacion estado
+    );
+
+    long countByEstado(EstadoProgramacion estado);
+
+    @Query("""
+    SELECT COUNT(p)
+    FROM ProgramacionEntity p
+    WHERE p.estado = :estado
+    AND EXISTS (
+        SELECT d.idDetalle
+        FROM DetalleEntity d
+        WHERE d.programacion = p
+        AND d.transportista.idUsuario = :idTransportista
+        AND d.estado = true
+    )
+    """)
+    long countByTransportistaAsignadoAndEstado(
+            @Param("idTransportista") int idTransportista,
+            @Param("estado") EstadoProgramacion estado
     );
 }

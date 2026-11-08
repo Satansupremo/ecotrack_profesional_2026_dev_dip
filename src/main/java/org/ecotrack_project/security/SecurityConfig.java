@@ -51,10 +51,6 @@ public class SecurityConfig {
         return configuration.getAuthenticationManager();
     }
 
-
-
-
-
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http) throws Exception {
@@ -78,7 +74,38 @@ public class SecurityConfig {
                         ).permitAll()
 
                         .requestMatchers(
-                                "/api/programacion/mis-programaciones/**",
+                                "/api/programacion/mis-programaciones/*/cola/**",
+                                "/api/programacion/mis-programaciones/*/finalizar"
+                        ).hasAnyRole("JEFE_UNIDAD", "ADMINISTRADOR")
+
+                        .requestMatchers(
+                                "/api/programacion/mis-programaciones/**"
+                        ).hasAnyRole("JEFE_UNIDAD", "ADMINISTRADOR", "TRANSPORTISTA")
+
+                        .requestMatchers(
+                                "/api/programacion/ejecutadas/**"
+                        ).hasAnyRole("OPERARIO", "ADMINISTRADOR")
+
+                        .requestMatchers(
+                                "/api/cola/**"
+                        ).hasAnyRole("OPERARIO", "ADMINISTRADOR")
+
+                        .requestMatchers(
+                                "/api/programacion/*/cola/pendientes"
+                        ).hasAnyRole("OPERARIO", "JEFE_UNIDAD", "ADMINISTRADOR")
+
+                        .requestMatchers(
+                                "/api/carga/iniciar",
+                                "/api/carga/salida/**",
+                                "/api/carga/finalizar",
+                                "/api/carga/registrar"
+                        ).hasAnyRole("OPERARIO", "ADMINISTRADOR")
+
+                        .requestMatchers(
+                                "/api/carga/programacion/**"
+                        ).hasAnyRole("OPERARIO", "JEFE_UNIDAD", "ADMINISTRADOR")
+
+                        .requestMatchers(
                                 "/api/reserva-unidad/**"
                         ).hasAnyRole("JEFE_UNIDAD", "ADMINISTRADOR")
 
@@ -132,7 +159,6 @@ public class SecurityConfig {
 
         return http.build();
     }
-
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

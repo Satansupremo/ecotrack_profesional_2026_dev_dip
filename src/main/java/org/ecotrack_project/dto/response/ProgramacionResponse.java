@@ -24,6 +24,7 @@ public class ProgramacionResponse {
     private LocalDateTime fechaRegistroSolicitud;
 
     private Integer cantidadUnidades;
+    private Integer cantidadSalidasPendientes;
     private String razonCantidadUnidades;
     private String equipoSeguridad;
     private String otrasRecomendaciones;

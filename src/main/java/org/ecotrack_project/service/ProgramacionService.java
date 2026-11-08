@@ -2,6 +2,7 @@ package org.ecotrack_project.service;
 
 import org.ecotrack_project.dto.request.ProgramacionRequest;
 import org.ecotrack_project.dto.response.ApiResponse;
+import org.ecotrack_project.dto.response.ColaResponse;
 import org.ecotrack_project.dto.response.ProgramacionResponse;
 import org.ecotrack_project.dto.response.UnidadProgramacionResponse;
 import org.ecotrack_project.enums.TipoVehiculo;
@@ -26,4 +27,13 @@ public interface ProgramacionService {
     ApiResponse<Integer> eliminarUnidadProgramacion(int idProgramacion, int idDetalle);
     ApiResponse<Integer> ejecutarProgramacion(int idProgramacion);
     ApiResponse<ProgramacionResponse> obtenerDetalleMiProgramacion(int idProgramacion);
+
+    ApiResponse<Integer> registrarSalida(int idProgramacion, int idDetalle);
+    ApiResponse<List<ColaResponse>> listarSalidasPendientes(int idProgramacion);
+    ApiResponse<Integer> finalizarProgramacion(int idProgramacion);
+
+    ApiResponse<Integer> obtenerTotalProgramacionesEjecutadas();
+    ApiResponse<Integer> obtenerTotalPaginasProgramacionesEjecutadas();
+    ApiResponse<Integer> obtenerTotalMisProgramacionesAsignadas();
+    ApiResponse<List<ProgramacionResponse>> listarProgramacionesEjecutadas(int pagina);
 }

@@ -18,4 +18,7 @@ public interface DetalleRepository extends JpaRepository<DetalleEntity, Integer>
     List<DetalleEntity> findByProgramacion_IdProgramacionAndEstadoTrueOrderByIdDetalleAsc(int idProgramacion);
     Optional<DetalleEntity> findByIdDetalleAndProgramacion_IdProgramacionAndEstadoTrue(int idDetalle, int idProgramacion);
     boolean existsByProgramacion_IdProgramacionAndEstadoTrue(int idProgramacion);
+    boolean existsByProgramacion_IdProgramacionAndTransportista_IdUsuarioAndEstadoTrue(int idProgramacion, int idTransportista);
+    List<DetalleEntity> findByProgramacion_IdProgramacionAndTransportista_IdUsuarioAndEstadoTrueOrderByIdDetalleAsc(int idProgramacion, int idTransportista);
+    long countByProgramacion_IdProgramacionAndEstadoTrue(int idProgramacion);
 }

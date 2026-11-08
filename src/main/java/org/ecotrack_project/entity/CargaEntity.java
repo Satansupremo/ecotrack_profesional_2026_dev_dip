@@ -2,6 +2,8 @@ package org.ecotrack_project.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.ecotrack_project.enums.EstadoCarga;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -36,4 +38,13 @@ public class CargaEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_transportista", nullable = false)
     private UsuarioEntity transportista;
+
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_cola", nullable = false, unique = true)
+    private ColaEntity cola;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado", nullable = false)
+    @Builder.Default
+    private EstadoCarga estado = EstadoCarga.EN_PROCESO;
 }
