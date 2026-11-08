@@ -8,7 +8,7 @@ public class Initialize {
     public static String MENSAJE_CONFIRMACION_PAGO_INICIAL;
     public static String MENSAJE_RECHAZO_PAGO_INICIAL;
     static{
-        TAMANIO_PAGINA = 5;
+        TAMANIO_PAGINA = 7;
         CANTIDAD_INTENTO_PAGO_INICIAL = 3;
         CANTIDAD_INTENTO_PAGO_FINAL = 10;
         MENSAJE_CONFIRMACION_PAGO_INICIAL = "Su pago inicial ha sido confirmado correctamente. "

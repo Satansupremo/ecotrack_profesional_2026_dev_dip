@@ -6,12 +6,14 @@ import org.ecotrack_project.dto.request.SolicitudRequest;
 import org.ecotrack_project.dto.response.ApiResponse;
 import org.ecotrack_project.dto.response.SolicitudResponse;
 import org.ecotrack_project.entity.AsignacionCoordinadorEntity;
+import org.ecotrack_project.entity.RecomendacionEntity;
 import org.ecotrack_project.entity.SolicitudEntity;
 import org.ecotrack_project.entity.UsuarioEntity;
 import org.ecotrack_project.enums.EstadoSolicitud;
 import org.ecotrack_project.enums.Rol;
 import org.ecotrack_project.initialize.Initialize;
 import org.ecotrack_project.repository.AsignacionCoordinadorRepository;
+import org.ecotrack_project.repository.RecomendacionRepository;
 import org.ecotrack_project.repository.SolicitudRepository;
 import org.ecotrack_project.repository.UsuarioRepository;
 import org.ecotrack_project.service.SolicitudService;
@@ -34,6 +36,7 @@ public class SolicitudServiceImpl implements SolicitudService {
     private final SolicitudRepository solicitudRepository;
     private final UsuarioRepository usuarioRepository;
     private final AsignacionCoordinadorRepository asignacionCoordinadorRepository;
+    private final RecomendacionRepository recomendacionRepository;
 
     private Optional<UsuarioEntity> obtenerUsuarioAutenticado() {
         String username = SecurityContextHolder.getContext()
@@ -683,6 +686,9 @@ public class SolicitudServiceImpl implements SolicitudService {
     private SolicitudResponse construirSolicitudPagoTotal(
             SolicitudEntity solicitud) {
 
+        RecomendacionEntity recomendacion = recomendacionRepository.findBySolicitud_IdSolicitud(solicitud.getIdSolicitud()).orElse(null);
+
+        assert recomendacion != null;
         SolicitudResponse.SolicitudResponseBuilder response =
                 SolicitudResponse.builder()
                         .idSolicitud(solicitud.getIdSolicitud())
@@ -695,7 +701,9 @@ public class SolicitudServiceImpl implements SolicitudService {
                         .nombreUsuario(solicitud.getUsuario().getNombre())
                         .apellidoUsuario(solicitud.getUsuario().getApellido())
                         .correo(solicitud.getUsuario().getCorreo())
-                        .celular(solicitud.getUsuario().getCelular());
+                        .celular(solicitud.getUsuario().getCelular())
+                        .cantidadUnidades(recomendacion.getCantidadUnidades())
+                        .razonCantidadUnidades(recomendacion.getRazonCantidadUnidades());
 
         Optional<AsignacionCoordinadorEntity> asignacionOptional =
                 asignacionCoordinadorRepository.findBySolicitud_IdSolicitud(

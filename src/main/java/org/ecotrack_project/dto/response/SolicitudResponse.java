@@ -27,4 +27,7 @@ public class SolicitudResponse {
     private Integer idCoordinador;
     private String nombreCoordinador;
     private boolean asignadaAlCoordinadorActual;
+
+    private Integer cantidadUnidades;
+    private String razonCantidadUnidades;
 }
