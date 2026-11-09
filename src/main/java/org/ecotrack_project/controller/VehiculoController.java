@@ -77,4 +77,19 @@ public class VehiculoController {
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
+
+    @PatchMapping("/cambiar-estado/{idVehiculo}")
+    public ResponseEntity<ApiResponse<String>> cambiarEstadoVehiculo(
+            @PathVariable int idVehiculo,
+            @RequestParam boolean nuevoEstado) {
+
+        var response = vehiculoService.cambiarEstadoVehiculo(idVehiculo, nuevoEstado);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        }
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
 }

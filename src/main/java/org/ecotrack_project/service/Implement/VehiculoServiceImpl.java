@@ -4,6 +4,7 @@ import org.ecotrack_project.dto.request.VehiculoRequest;
 import org.ecotrack_project.dto.response.ApiResponse;
 import org.ecotrack_project.dto.response.VehiculoResponse;
 import org.ecotrack_project.entity.VehiculoEntity;
+import org.ecotrack_project.enums.SituacionVehiculo;
 import org.ecotrack_project.initialize.Initialize;
 import org.ecotrack_project.repository.VehiculoRepository;
 import org.ecotrack_project.service.VehiculoService;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -28,7 +30,7 @@ public class VehiculoServiceImpl implements VehiculoService {
         long totalRegistros = vehiculoRepository.count();
         int totalPaginas = (int) Math.ceil((double) totalRegistros / Initialize.TAMANIO_PAGINA);
 
-        return ApiResponse.success(totalPaginas, "Total de paginas obtenidas correctamente");
+        return ApiResponse.success(totalPaginas, "Total de páginas obtenidas correctamente");
     }
 
     @Override
@@ -38,15 +40,7 @@ public class VehiculoServiceImpl implements VehiculoService {
 
         List<VehiculoResponse> response = vehiculosPage.getContent()
                 .stream()
-                .map(entity -> VehiculoResponse.builder()
-                        .idVehiculo(entity.getIdVehiculo())
-                        .fechaRegistro(entity.getFechaRegistro())
-                        .placa(entity.getPlaca())
-                        .marca(entity.getMarca())
-                        .modelo(entity.getModelo())
-                        .capacidadLibras(entity.getCapacidadLibras())
-                        .estado(entity.isEstado())
-                        .build())
+                .map(this::mapearA_Response)
                 .collect(Collectors.toList());
 
         return ApiResponse.success(response, "Lista obtenida correctamente");
@@ -60,11 +54,13 @@ public class VehiculoServiceImpl implements VehiculoService {
                 .marca(vehiculoRequest.getMarca())
                 .modelo(vehiculoRequest.getModelo())
                 .capacidadLibras(vehiculoRequest.getCapacidadLibras())
+                .tipo(vehiculoRequest.getTipo())
                 .estado(true)
+                .situacion(SituacionVehiculo.DISPONIBLE)
                 .build();
 
         VehiculoEntity guardado = vehiculoRepository.save(entity);
-        return ApiResponse.success(guardado.getIdVehiculo(), "Vehiculo registrado correctamente");
+        return ApiResponse.success(guardado.getIdVehiculo(), "Vehículo registrado correctamente");
     }
 
     @Override
@@ -72,7 +68,7 @@ public class VehiculoServiceImpl implements VehiculoService {
         Optional<VehiculoEntity> entityOptional = vehiculoRepository.findById(idVehiculo);
 
         if (entityOptional.isEmpty()) {
-            return ApiResponse.error("Vehiculo no encontrado");
+            return ApiResponse.error("Vehículo no encontrado");
         }
 
         VehiculoEntity entity = entityOptional.get();
@@ -80,9 +76,11 @@ public class VehiculoServiceImpl implements VehiculoService {
         entity.setMarca(vehiculoRequest.getMarca());
         entity.setModelo(vehiculoRequest.getModelo());
         entity.setCapacidadLibras(vehiculoRequest.getCapacidadLibras());
+        entity.setTipo(vehiculoRequest.getTipo());
+        // La situación no se toca ni se altera en la edición
 
         VehiculoEntity actualizado = vehiculoRepository.save(entity);
-        return ApiResponse.success(actualizado.getIdVehiculo(), "Vehiculo actualizado correctamente");
+        return ApiResponse.success(actualizado.getIdVehiculo(), "Vehículo actualizado correctamente");
     }
 
     @Override
@@ -90,20 +88,36 @@ public class VehiculoServiceImpl implements VehiculoService {
         Optional<VehiculoEntity> entityOptional = vehiculoRepository.findById(idVehiculo);
 
         if (entityOptional.isEmpty()) {
-            return ApiResponse.error("Vehiculo no encontrado");
+            return ApiResponse.error("Vehículo no encontrado");
         }
 
         VehiculoEntity entity = entityOptional.get();
-        VehiculoResponse response = VehiculoResponse.builder()
+        return ApiResponse.success(mapearA_Response(entity), "Vehículo encontrado correctamente");
+    }
+
+    @Override
+    public ApiResponse<String> cambiarEstadoVehiculo(int idVehiculo, boolean nuevoEstado) {
+        return vehiculoRepository.findById(idVehiculo)
+                .map(entity -> {
+                    entity.setEstado(nuevoEstado);
+                    vehiculoRepository.save(entity);
+                    String mensaje = nuevoEstado ? "Vehículo activado correctamente" : "Vehículo desactivado correctamente";
+                    return ApiResponse.success(mensaje, mensaje);
+                })
+                .orElseGet(() -> ApiResponse.error("Vehículo no encontrado"));
+    }
+
+    private VehiculoResponse mapearA_Response(VehiculoEntity entity) {
+        return VehiculoResponse.builder()
                 .idVehiculo(entity.getIdVehiculo())
                 .fechaRegistro(entity.getFechaRegistro())
                 .placa(entity.getPlaca())
                 .marca(entity.getMarca())
                 .modelo(entity.getModelo())
                 .capacidadLibras(entity.getCapacidadLibras())
+                .tipo(entity.getTipo())
                 .estado(entity.isEstado())
+                .situacion(entity.getSituacion())
                 .build();
-
-        return ApiResponse.success(response, "Vehiculo encontrado correctamente");
     }
 }

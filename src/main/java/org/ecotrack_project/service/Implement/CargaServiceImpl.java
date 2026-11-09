@@ -3,18 +3,20 @@ package org.ecotrack_project.service.Implement;
 import org.ecotrack_project.dto.request.ArticuloRecuperadoRequest;
 import org.ecotrack_project.dto.request.FinalizarCargaRequest;
 import org.ecotrack_project.dto.request.IniciarCargaRequest;
+import org.ecotrack_project.dto.response.CantidadCargasResponse;
 import org.ecotrack_project.dto.response.CargaProcesoResponse;
 import org.ecotrack_project.entity.*;
 import org.ecotrack_project.enums.EstadoCarga;
-import org.ecotrack_project.repository.ArticuloRecuperadoRepository;
+import org.ecotrack_project.initialize.Initialize;
+import org.ecotrack_project.repository.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import org.ecotrack_project.dto.request.CargaRequest;
 import org.ecotrack_project.dto.response.ApiResponse;
 import org.ecotrack_project.dto.response.CargaResponse;
 import org.ecotrack_project.enums.EstadoProgramacion;
-import org.ecotrack_project.repository.CargaRepository;
-import org.ecotrack_project.repository.ColaRepository;
-import org.ecotrack_project.repository.ProgramacionRepository;
 import org.ecotrack_project.security.UsuarioDetails;
 import org.ecotrack_project.service.CargaService;
 import org.springframework.security.core.Authentication;
@@ -32,19 +34,25 @@ public class CargaServiceImpl implements CargaService {
     private final ProgramacionRepository programacionRepository;
     private final LiberacionRecursosService liberacionRecursosService;
     private final ArticuloRecuperadoRepository articuloRecuperadoRepository;
+    private final FinalizacionProgramacionService finalizacionProgramacionService;
+    private final UsuarioRepository usuarioRepository;
 
     public CargaServiceImpl(
             CargaRepository cargaRepository,
             ColaRepository colaRepository,
             ProgramacionRepository programacionRepository,
             LiberacionRecursosService liberacionRecursosService,
-            ArticuloRecuperadoRepository articuloRecuperadoRepository
+            ArticuloRecuperadoRepository articuloRecuperadoRepository,
+            UsuarioRepository usuarioRepository,
+            FinalizacionProgramacionService finalizacionProgramacionService
     ) {
         this.cargaRepository = cargaRepository;
         this.colaRepository = colaRepository;
         this.programacionRepository = programacionRepository;
         this.liberacionRecursosService = liberacionRecursosService;
         this.articuloRecuperadoRepository = articuloRecuperadoRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.finalizacionProgramacionService = finalizacionProgramacionService;
     }
 
     @Override
@@ -249,27 +257,7 @@ public class CargaServiceImpl implements CargaService {
         carga.setEstado(EstadoCarga.REGISTRADA);
         cargaRepository.saveAndFlush(carga);
 
-        if (programacion.getEstado() == EstadoProgramacion.POR_FINALIZAR) {
-
-            long totalSalidas = colaRepository
-                    .countByDetalle_Programacion_IdProgramacion(idProgramacion);
-
-            long totalCargasRegistradas = cargaRepository
-                    .findByProgramacion_IdProgramacionAndEstado(
-                            idProgramacion,
-                            EstadoCarga.REGISTRADA
-                    ).size();
-
-            if (totalSalidas == totalCargasRegistradas) {
-
-                programacion.setEstado(EstadoProgramacion.FINALIZADO);
-                programacion.setFechaFinalizacion(LocalDateTime.now());
-
-                liberacionRecursosService.liberarRecursos(idProgramacion);
-
-                programacionRepository.save(programacion);
-            }
-        }
+        finalizacionProgramacionService.verificarYFinalizar(idProgramacion);
 
         return ApiResponse.success(
                 carga.getIdCarga(),
@@ -435,6 +423,27 @@ public class CargaServiceImpl implements CargaService {
                 cargas,
                 "Cargas obtenidas correctamente."
         );
+    }
+
+    @Override
+    public ApiResponse<Integer> obtenerTotalPaginasRendimiento(LocalDateTime fechaInicio, LocalDateTime fechaFin) {
+        Pageable pageable = PageRequest.of(0, 1);
+        Page<CantidadCargasResponse> rendimientoPage = cargaRepository.obtenerRendimientoGeneralCargasPaginado(fechaInicio, fechaFin, pageable);
+
+        long totalRegistros = rendimientoPage.getTotalElements();
+        int totalPaginas = (int) Math.ceil((double) totalRegistros / Initialize.TAMANIO_PAGINA);
+
+        return ApiResponse.success(totalPaginas, "Total de páginas de rendimiento calculadas correctamente");
+    }
+
+    @Override
+    public ApiResponse<List<CantidadCargasResponse>> obtenerRendimientoCargasPaginado(
+            LocalDateTime fechaInicio, LocalDateTime fechaFin, int pagina) {
+
+        Pageable pageable = PageRequest.of(pagina, Initialize.TAMANIO_PAGINA);
+        Page<CantidadCargasResponse> rendimientoPage = cargaRepository.obtenerRendimientoGeneralCargasPaginado(fechaInicio, fechaFin, pageable);
+
+        return ApiResponse.success(rendimientoPage.getContent(), "Reporte de rendimiento paginado obtenido con éxito");
     }
 
     private UsuarioEntity obtenerUsuarioAutenticado() {

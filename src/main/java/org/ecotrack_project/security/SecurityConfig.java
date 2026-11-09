@@ -65,6 +65,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
 
+                        // --- ENDPOINTS PÚBLICOS ---
                         .requestMatchers(
                                 "/api/usuario/login",
                                 "/api/usuario/registro",
@@ -73,6 +74,42 @@ public class SecurityConfig {
                                 "/swagger-ui.html"
                         ).permitAll()
 
+                        // --- CRUD DE USUARIOS (SÓLO ADMINISTRADOR) ---
+                        .requestMatchers(
+                                "/api/usuario/total-paginas",
+                                "/api/usuario/listar/**",
+                                "/api/usuario/buscar/**",
+                                "/api/usuario/crear-superusuario",
+                                "/api/usuario/actualizar/**",
+                                "/api/usuario/cambiar-estado/**"
+                        ).hasRole("ADMINISTRADOR")
+
+                        // --- GESTIÓN DE VEHÍCULOS (SÓLO ADMINISTRADOR) ---
+                        .requestMatchers(
+                                "/api/vehiculo/paginas",
+                                "/api/vehiculo/listar",
+                                "/api/vehiculo/buscar/**",
+                                "/api/vehiculo/registrar",
+                                "/api/vehiculo/actualizar/**",
+                                "/api/vehiculo/cambiar-estado/**"
+                        ).hasRole("ADMINISTRADOR")
+
+                        // --- GESTIÓN DE MEDIOS DE PAGO (SÓLO ADMINISTRADOR) ---
+                        .requestMatchers(
+                                "/api/medio-pago/paginas",
+                                "/api/medio-pago/listar-paginado",
+                                "/api/medio-pago/buscar/**",
+                                "/api/medio-pago/registrar",
+                                "/api/medio-pago/actualizar/**",
+                                "/api/medio-pago/cambiar-estado/**"
+                        ).hasRole("ADMINISTRADOR")
+
+                        .requestMatchers(
+                                "/api/carga/rendimiento/paginas",
+                                "/api/carga/rendimiento/listar/**"
+                        ).hasRole("ADMINISTRADOR")
+
+                        // --- RESTO DE ENDPOINTS DEL SISTEMA ---
                         .requestMatchers(
                                 "/api/programacion/mis-programaciones/*/cola/**",
                                 "/api/programacion/mis-programaciones/*/finalizar"
@@ -159,6 +196,7 @@ public class SecurityConfig {
 
         return http.build();
     }
+
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

@@ -15,4 +15,6 @@ public interface VehiculoService {
     ApiResponse<Integer> registrarVehiculo(VehiculoRequest vehiculoRequest);
     ApiResponse<Integer> actualizarVehiculo(int idVehiculo, VehiculoRequest vehiculoRequest);
     ApiResponse<VehiculoResponse> obtenerVehiculoById(int idVehiculo);
+    ApiResponse<String> cambiarEstadoVehiculo(int idVehiculo, boolean nuevoEstado);
+
 }

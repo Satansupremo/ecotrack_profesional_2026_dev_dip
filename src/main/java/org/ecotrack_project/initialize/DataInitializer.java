@@ -33,12 +33,13 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        inicializarUsuarios();
-        inicializarVehiculos();
-        inicializarMediosPago();
+        //inicializarUsuarios();
+        //inicializarVehiculos();
+        //inicializarMediosPago();
     }
 
     private void inicializarUsuarios() {
+
         if (usuarioRepository.count() == 0) {
             String passwordEncriptada = passwordEncoder.encode(PASSWORD_PRUEBA);
             List<UsuarioEntity> todosLosUsuarios = new ArrayList<>();

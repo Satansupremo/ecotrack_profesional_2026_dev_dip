@@ -45,6 +45,7 @@ public class ProgramacionServiceImpl implements ProgramacionService {
     private final ColaRepository colaRepository;
     private final LiberacionRecursosService liberacionRecursosService;
     private final CargaRepository cargaRepository;
+    private final FinalizacionProgramacionService finalizacionProgramacionService;
 
     public ProgramacionServiceImpl(
             ProgramacionRepository programacionRepository,
@@ -56,7 +57,8 @@ public class ProgramacionServiceImpl implements ProgramacionService {
             VehiculoRepository vehiculoRepository,
             ColaRepository colaRepository,
             LiberacionRecursosService liberacionRecursosService,
-            CargaRepository cargaRepository
+            CargaRepository cargaRepository,
+            FinalizacionProgramacionService finalizacionProgramacionService
     ) {
         this.programacionRepository = programacionRepository;
         this.solicitudRepository = solicitudRepository;
@@ -68,6 +70,7 @@ public class ProgramacionServiceImpl implements ProgramacionService {
         this.colaRepository = colaRepository;
         this.liberacionRecursosService = liberacionRecursosService;
         this.cargaRepository = cargaRepository;
+        this.finalizacionProgramacionService = finalizacionProgramacionService;
     }
 
     @Override
@@ -1065,44 +1068,42 @@ public class ProgramacionServiceImpl implements ProgramacionService {
             );
         }
 
-        long salidasPendientes = colaRepository
-                .countByDetalle_Programacion_IdProgramacionAndEstadoTrue(idProgramacion);
+        programacion.setEstado(EstadoProgramacion.POR_FINALIZAR);
 
-        long totalCargas = cargaRepository
-                .countByProgramacion_IdProgramacion(idProgramacion);
+        programacionRepository.saveAndFlush(programacion);
 
-        if (salidasPendientes > 0 || totalCargas < totalSalidas) {
+        boolean finalizada =
+                finalizacionProgramacionService.verificarYFinalizar(idProgramacion);
 
-            programacion.setEstado(EstadoProgramacion.POR_FINALIZAR);
-
-            programacionRepository.save(programacion);
-
-            long cargasPendientes = totalSalidas - totalCargas;
-
+        if (finalizada) {
             return ApiResponse.success(
                     idProgramacion,
-                    "Se solicitó finalizar la programación. "
-                            + "Salidas pendientes de recepción: "
-                            + salidasPendientes
-                            + ". Cargas pendientes de registro: "
-                            + cargasPendientes
+                    "Programación finalizada correctamente"
             );
         }
 
-        programacion.setEstado(EstadoProgramacion.FINALIZADO);
-        programacion.setFechaFinalizacion(LocalDateTime.now());
+        long salidasPendientes = colaRepository
+                .countByDetalle_Programacion_IdProgramacionAndEstadoTrue(
+                        idProgramacion
+                );
 
-        liberacionRecursosService.liberarRecursos(idProgramacion);
+        long cargasRegistradas = cargaRepository
+                .findByProgramacion_IdProgramacionAndEstado(
+                        idProgramacion,
+                        EstadoCarga.REGISTRADA
+                ).size();
 
-        programacionRepository.save(programacion);
+        long cargasPendientes = totalSalidas - cargasRegistradas;
 
         return ApiResponse.success(
                 idProgramacion,
-                "Programación finalizada correctamente"
+                "Se solicitó finalizar la programación. "
+                        + "Salidas pendientes de recepción: "
+                        + salidasPendientes
+                        + ". Cargas pendientes de registro: "
+                        + cargasPendientes
         );
     }
-
-
 
     private Optional<UsuarioEntity> seleccionarJefeUnidad(LocalDate fechaEjecucion) {
 

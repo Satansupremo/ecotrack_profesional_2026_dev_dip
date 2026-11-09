@@ -137,6 +137,7 @@ public class PagoInicialServiceImpl implements PagoInicialService {
                 .horaOperacion(pago.getHoraOperacion())
                 .numeroOperacion(pago.getNumeroOperacion())
                 .estadoPago(pago.getEstado().name())
+                .fechaOperacion(pago.getFechaOperacion())
 
                 .nombreMedioPago(pago.getMedioPago().getNombre())
                 .build();

@@ -1,8 +1,9 @@
-
 package org.ecotrack_project.controller;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.ecotrack_project.dto.request.MedioPagoRequest;
 import org.ecotrack_project.dto.response.ApiResponse;
 import org.ecotrack_project.dto.response.MedioPagoResponse;
 import org.ecotrack_project.service.MedioPagoService;
@@ -30,5 +31,83 @@ public class MedioPagoController {
         }
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @GetMapping("/paginas")
+    public ResponseEntity<ApiResponse<Integer>> obtenerTotalPaginas() {
+        var response = medioPagoService.obtenerTotalPaginas();
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        }
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @GetMapping("/listar-paginado")
+    public ResponseEntity<ApiResponse<List<MedioPagoResponse>>> listarMediosPagoPaginado(
+            @RequestParam(defaultValue = "0") int pagina) {
+
+        var response = medioPagoService.listarMediosPago(pagina);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        }
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @GetMapping("/buscar/{id}")
+    public ResponseEntity<ApiResponse<MedioPagoResponse>> obtenerMedioPagoPorId(
+            @PathVariable int id) {
+
+        var response = medioPagoService.obtenerMedioPagoPorId(id);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        }
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @PostMapping("/registrar")
+    public ResponseEntity<ApiResponse<Integer>> registrarMedioPago(
+            @Valid @RequestBody MedioPagoRequest request) {
+
+        var response = medioPagoService.registrarMedioPago(request);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        }
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @PutMapping("/actualizar/{id}")
+    public ResponseEntity<ApiResponse<Integer>> actualizarMedioPago(
+            @PathVariable int id,
+            @Valid @RequestBody MedioPagoRequest request) {
+
+        var response = medioPagoService.actualizarMedioPago(id, request);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        }
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @PatchMapping("/cambiar-estado/{id}")
+    public ResponseEntity<ApiResponse<String>> cambiarEstadoMedioPago(
+            @PathVariable int id,
+            @RequestParam boolean nuevoEstado) {
+
+        var response = medioPagoService.cambiarEstadoMedioPago(id, nuevoEstado);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        }
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 }

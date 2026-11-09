@@ -28,6 +28,7 @@ public class PagoInicialDetalleResponse {
     private LocalTime horaOperacion;
     private String numeroOperacion;
     private String estadoPago;
+    private LocalDate fechaOperacion;
 
     private String nombreMedioPago;
 }

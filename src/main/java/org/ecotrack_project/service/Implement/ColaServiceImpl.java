@@ -21,13 +21,16 @@ public class ColaServiceImpl implements ColaService {
 
     private final ColaRepository colaRepository;
     private final ProgramacionRepository programacionRepository;
+    private final FinalizacionProgramacionService finalizacionProgramacionService;
 
     public ColaServiceImpl(
             ColaRepository colaRepository,
-            ProgramacionRepository programacionRepository
+            ProgramacionRepository programacionRepository,
+            FinalizacionProgramacionService finalizacionProgramacionService
     ) {
         this.colaRepository = colaRepository;
         this.programacionRepository = programacionRepository;
+        this.finalizacionProgramacionService = finalizacionProgramacionService;
     }
 
     @Override
@@ -101,7 +104,9 @@ public class ColaServiceImpl implements ColaService {
         }
 
         cola.setEstado(false);
-        colaRepository.save(cola);
+        colaRepository.saveAndFlush(cola);
+
+        finalizacionProgramacionService.verificarYFinalizar(idProgramacion);
 
         return ApiResponse.success(
                 idCola,

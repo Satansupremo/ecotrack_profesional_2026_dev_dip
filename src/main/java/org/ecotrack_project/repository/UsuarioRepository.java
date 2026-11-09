@@ -4,6 +4,8 @@ import jakarta.persistence.LockModeType;
 import org.ecotrack_project.entity.UsuarioEntity;
 import org.ecotrack_project.enums.Rol;
 import org.ecotrack_project.enums.SituacionUsuario;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -16,14 +18,22 @@ import java.util.Optional;
 @Repository
 public interface UsuarioRepository extends JpaRepository<UsuarioEntity, Integer> {
 
+    // --- NUEVOS MÉTODOS PARA EL CRUD PAGINADO DE EMPLEADOS ---
+    Page<UsuarioEntity> findByRolNot(Rol rol, Pageable pageable);
+    long countByRolNot(Rol rol);
+
+    // --- MÉTODOS EXISTENTES MANTENIDOS INTACTOS ---
     Optional<UsuarioEntity> findByUsername(String username);
     boolean existsByUsername(String username);
     boolean existsByCorreo(String correo);
     boolean existsByDni(String dni);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT u FROM UsuarioEntity u WHERE u.username = :username")
     Optional<UsuarioEntity> findByUsernameForUpdate(@Param("username") String username);
+
     List<UsuarioEntity> findByRolAndEstadoTrue(Rol rol);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<UsuarioEntity> findFirstByRolAndEstadoTrueAndSituacionOrderByIdUsuarioAsc(Rol rol, SituacionUsuario situacion);
 
@@ -40,5 +50,4 @@ public interface UsuarioRepository extends JpaRepository<UsuarioEntity, Integer>
             @Param("rol") Rol rol,
             @Param("situacion") SituacionUsuario situacion
     );
-
 }

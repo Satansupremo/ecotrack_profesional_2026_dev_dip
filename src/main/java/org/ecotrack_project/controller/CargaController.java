@@ -6,12 +6,15 @@ import org.ecotrack_project.dto.request.CargaRequest;
 import org.ecotrack_project.dto.request.FinalizarCargaRequest;
 import org.ecotrack_project.dto.request.IniciarCargaRequest;
 import org.ecotrack_project.dto.response.ApiResponse;
+import org.ecotrack_project.dto.response.CantidadCargasResponse;
 import org.ecotrack_project.dto.response.CargaProcesoResponse;
 import org.ecotrack_project.dto.response.CargaResponse;
 import org.ecotrack_project.service.CargaService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -80,5 +83,24 @@ public class CargaController {
         return response.isSuccess()
                 ? ResponseEntity.ok(response)
                 : ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping("/rendimiento/paginas")
+    public ResponseEntity<ApiResponse<Integer>> obtenerTotalPaginasRendimiento(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fechaInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fechaFin
+    ) {
+        var response = cargaService.obtenerTotalPaginasRendimiento(fechaInicio, fechaFin);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/rendimiento/listar/{pagina}")
+    public ResponseEntity<ApiResponse<List<CantidadCargasResponse>>> obtenerRendimientoCargasPaginado(
+            @PathVariable int pagina,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fechaInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fechaFin
+    ) {
+        var response = cargaService.obtenerRendimientoCargasPaginado(fechaInicio, fechaFin, pagina);
+        return ResponseEntity.ok(response);
     }
 }
