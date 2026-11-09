@@ -83,15 +83,15 @@ INSERT INTO tb_medio_pago
 (nombre, descripcion, numero_cuenta, estado)
 VALUES
 ('Transferencia Bancaria',
- 'Transferencia electrónica vía BCP / BBVA / Interbank',
+ 'Transferencia electronica via BCP / BBVA / Interbank',
  '19199887766012', TRUE),
 
 ('Yape',
- 'Pago rápido a través de billetera digital Yape',
+ 'Pago rapido a traves de billetera digital Yape',
  '987654321', TRUE),
 
 ('Plin',
- 'Pago rápido a través de billetera digital Plin',
+ 'Pago rapido a traves de billetera digital Plin',
  '987654321', TRUE);
 
 USE ecotrack2026_db;
@@ -387,19 +387,19 @@ VALUES
  '$2a$10$s1hFL.YsVp3I0KA2XQwW5eGH1IuN8OzvcmvI3YIMBylGaeWo2e.4S',
  '11111111', TRUE, 'JEFE_UNIDAD', 'DISPONIBLE'),
 
-('Juan', 'Pérez', 'juan.perez@ecotrack.com', '900000001', 'transportista1',
+('Juan', 'Perez', 'juan.perez@ecotrack.com', '900000001', 'transportista1',
  '$2a$10$s1hFL.YsVp3I0KA2XQwW5eGH1IuN8OzvcmvI3YIMBylGaeWo2e.4S',
  '22222221', TRUE, 'TRANSPORTISTA', 'DISPONIBLE'),
 
-('Pedro', 'Gómez', 'pedro.gomez@ecotrack.com', '900000002', 'transportista2',
+('Pedro', 'Gomez', 'pedro.gomez@ecotrack.com', '900000002', 'transportista2',
  '$2a$10$s1hFL.YsVp3I0KA2XQwW5eGH1IuN8OzvcmvI3YIMBylGaeWo2e.4S',
  '22222222', TRUE, 'TRANSPORTISTA', 'DISPONIBLE'),
 
-('Luis', 'Martínez', 'luis.martinez@ecotrack.com', '900000003', 'transportista3',
+('Luis', 'Martinez', 'luis.martinez@ecotrack.com', '900000003', 'transportista3',
  '$2a$10$s1hFL.YsVp3I0KA2XQwW5eGH1IuN8OzvcmvI3YIMBylGaeWo2e.4S',
  '22222223', TRUE, 'TRANSPORTISTA', 'DISPONIBLE'),
 
-('Ana', 'Rodríguez', 'ana.rodriguez@ecotrack.com', '900000004', 'transportista4',
+('Ana', 'Rodriguez', 'ana.rodriguez@ecotrack.com', '900000004', 'transportista4',
  '$2a$10$s1hFL.YsVp3I0KA2XQwW5eGH1IuN8OzvcmvI3YIMBylGaeWo2e.4S',
  '22222224', TRUE, 'TRANSPORTISTA', 'DISPONIBLE'),
 
@@ -407,7 +407,7 @@ VALUES
  '$2a$10$s1hFL.YsVp3I0KA2XQwW5eGH1IuN8OzvcmvI3YIMBylGaeWo2e.4S',
  '22222225', TRUE, 'TRANSPORTISTA', 'DISPONIBLE'),
 
-('Jorge', 'López', 'jorge.lopez@ecotrack.com', '900000006', 'transportista6',
+('Jorge', 'Lopez', 'jorge.lopez@ecotrack.com', '900000006', 'transportista6',
  '$2a$10$s1hFL.YsVp3I0KA2XQwW5eGH1IuN8OzvcmvI3YIMBylGaeWo2e.4S',
  '22222226', TRUE, 'TRANSPORTISTA', 'DISPONIBLE'),
 
@@ -415,7 +415,7 @@ VALUES
  '$2a$10$s1hFL.YsVp3I0KA2XQwW5eGH1IuN8OzvcmvI3YIMBylGaeWo2e.4S',
  '22222227', TRUE, 'TRANSPORTISTA', 'DISPONIBLE'),
 
-('Sofía', 'Castro', 'sofia.castro@ecotrack.com', '900000008', 'transportista8',
+('Sofia', 'Castro', 'sofia.castro@ecotrack.com', '900000008', 'transportista8',
  '$2a$10$s1hFL.YsVp3I0KA2XQwW5eGH1IuN8OzvcmvI3YIMBylGaeWo2e.4S',
  '22222228', TRUE, 'TRANSPORTISTA', 'DISPONIBLE'),
 
@@ -423,7 +423,7 @@ VALUES
  '$2a$10$s1hFL.YsVp3I0KA2XQwW5eGH1IuN8OzvcmvI3YIMBylGaeWo2e.4S',
  '22222229', TRUE, 'TRANSPORTISTA', 'DISPONIBLE'),
 
-('Andrés', 'Villa', 'andres.villa@ecotrack.com', '900000010', 'transportista10',
+('Andres', 'Villa', 'andres.villa@ecotrack.com', '900000010', 'transportista10',
  '$2a$10$s1hFL.YsVp3I0KA2XQwW5eGH1IuN8OzvcmvI3YIMBylGaeWo2e.4S',
  '22222230', TRUE, 'TRANSPORTISTA', 'DISPONIBLE'),
 
@@ -431,7 +431,7 @@ VALUES
  '$2a$10$s1hFL.YsVp3I0KA2XQwW5eGH1IuN8OzvcmvI3YIMBylGaeWo2e.4S',
  '33333331', TRUE, 'ADMINISTRADOR', 'DISPONIBLE'),
 
-('Coordinador', 'Logística', 'coordinador@ecotrack.com', '922222222', 'coordinador',
+('Coordinador', 'Logistica', 'coordinador@ecotrack.com', '922222222', 'coordinador',
  '$2a$10$s1hFL.YsVp3I0KA2XQwW5eGH1IuN8OzvcmvI3YIMBylGaeWo2e.4S',
  '33333332', TRUE, 'COORDINADOR', 'DISPONIBLE'),
 
@@ -439,10 +439,10 @@ VALUES
  '$2a$10$s1hFL.YsVp3I0KA2XQwW5eGH1IuN8OzvcmvI3YIMBylGaeWo2e.4S',
  '33333333', TRUE, 'OPERARIO', 'DISPONIBLE'),
 
-('Usuario', 'Estándar', 'usuario@ecotrack.com', '944444444', 'usuario',
+('Usuario', 'Estandar', 'usuario@ecotrack.com', '944444444', 'usuario',
  '$2a$10$s1hFL.YsVp3I0KA2XQwW5eGH1IuN8OzvcmvI3YIMBylGaeWo2e.4S',
  '33333334', TRUE, 'USUARIO', 'NINGUNO'),
 
-('Jefe', 'Estándar', 'jefe2@ecotrack.com', '944444444', 'jefe2',
+('Jefe', 'Estandar', 'jefe2@ecotrack.com', '944444444', 'jefe2',
  '$2a$10$s1hFL.YsVp3I0KA2XQwW5eGH1IuN8OzvcmvI3YIMBylGaeWo2e.4S',
  '33333335', TRUE, 'JEFE_UNIDAD', 'DISPONIBLE');
