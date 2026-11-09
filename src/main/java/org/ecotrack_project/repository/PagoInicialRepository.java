@@ -13,4 +13,5 @@ public interface PagoInicialRepository extends JpaRepository<PagoInicialEntity, 
 
     Optional<PagoInicialEntity> findBySolicitud_IdSolicitudAndEstado(int idSolicitud, EstadoPagoInicial estado);
     long countBySolicitud_IdSolicitud(int idSolicitud);
+    Optional<PagoInicialEntity> findFirstBySolicitud_IdSolicitudOrderByIdPagoInicialDesc(int idSolicitud);
 }

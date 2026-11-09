@@ -12,4 +12,5 @@ public interface PagoTotalRepository extends JpaRepository<PagoTotalEntity, Inte
 
     Optional<PagoTotalEntity> findBySolicitud_IdSolicitudAndEstado(int idSolicitud, EstadoPagoTotal estado);
     long countBySolicitud_IdSolicitud(int idSolicitud);
+    Optional<PagoTotalEntity> findFirstBySolicitud_IdSolicitudOrderByIdPagoTotalDesc(int idSolicitud);
 }

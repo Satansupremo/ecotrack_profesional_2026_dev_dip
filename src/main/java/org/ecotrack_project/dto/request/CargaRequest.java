@@ -23,7 +23,6 @@ public class CargaRequest {
     @DecimalMin(value = "0.01", message = "El peso debe ser mayor que cero.")
     private BigDecimal pesoLibras;
 
-    @NotEmpty(message = "Debe registrar al menos un artículo recuperado.")
     @Valid
     private List<ArticuloRecuperadoRequest> articulos;
 }

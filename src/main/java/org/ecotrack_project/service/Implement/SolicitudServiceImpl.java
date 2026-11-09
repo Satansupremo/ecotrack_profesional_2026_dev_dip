@@ -3,19 +3,14 @@ package org.ecotrack_project.service.Implement;
 
 import lombok.RequiredArgsConstructor;
 import org.ecotrack_project.dto.request.SolicitudRequest;
-import org.ecotrack_project.dto.response.ApiResponse;
-import org.ecotrack_project.dto.response.SolicitudResponse;
-import org.ecotrack_project.entity.AsignacionCoordinadorEntity;
-import org.ecotrack_project.entity.RecomendacionEntity;
-import org.ecotrack_project.entity.SolicitudEntity;
-import org.ecotrack_project.entity.UsuarioEntity;
+import org.ecotrack_project.dto.response.*;
+import org.ecotrack_project.entity.*;
+import org.ecotrack_project.enums.EstadoCarga;
+import org.ecotrack_project.enums.EstadoProgramacion;
 import org.ecotrack_project.enums.EstadoSolicitud;
 import org.ecotrack_project.enums.Rol;
 import org.ecotrack_project.initialize.Initialize;
-import org.ecotrack_project.repository.AsignacionCoordinadorRepository;
-import org.ecotrack_project.repository.RecomendacionRepository;
-import org.ecotrack_project.repository.SolicitudRepository;
-import org.ecotrack_project.repository.UsuarioRepository;
+import org.ecotrack_project.repository.*;
 import org.ecotrack_project.service.SolicitudService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,8 +19,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -37,6 +35,12 @@ public class SolicitudServiceImpl implements SolicitudService {
     private final UsuarioRepository usuarioRepository;
     private final AsignacionCoordinadorRepository asignacionCoordinadorRepository;
     private final RecomendacionRepository recomendacionRepository;
+    private final ProgramacionRepository programacionRepository;
+    private final DetalleRepository detalleRepository;
+    private final CargaRepository cargaRepository;
+    private final ArticuloRecuperadoRepository articuloRecuperadoRepository;
+    private final PagoInicialRepository pagoInicialRepository;
+    private final PagoTotalRepository pagoTotalRepository;
 
     private Optional<UsuarioEntity> obtenerUsuarioAutenticado() {
         String username = SecurityContextHolder.getContext()
@@ -106,7 +110,7 @@ public class SolicitudServiceImpl implements SolicitudService {
         );
 
         Page<SolicitudEntity> solicitudesPage = solicitudRepository
-                .findByUsuario_IdUsuario(idUsuario, pageable);
+                .findByUsuario_IdUsuarioOrderByIdSolicitudDesc(idUsuario, pageable);
 
         List<SolicitudResponse> response = solicitudesPage.getContent()
                 .stream()
@@ -154,7 +158,7 @@ public class SolicitudServiceImpl implements SolicitudService {
     }
 
     @Override
-    public ApiResponse<SolicitudResponse> obtenerSolicitud(int idSolicitud) {
+    public ApiResponse<SolicitudDetalleResponse> obtenerSolicitud(int idSolicitud) {
         Optional<UsuarioEntity> usuarioOptional = obtenerUsuarioAutenticado();
 
         if (usuarioOptional.isEmpty()) {
@@ -171,15 +175,267 @@ public class SolicitudServiceImpl implements SolicitudService {
         }
 
         SolicitudEntity entity = entityOptional.get();
+        EstadoSolicitud estadoSolicitud = entity.getEstado();
 
-        SolicitudResponse response = SolicitudResponse.builder()
+        Optional<RecomendacionEntity> recomendacionOptional =
+                recomendacionRepository.findBySolicitud_IdSolicitud(idSolicitud);
+
+        Optional<AsignacionCoordinadorEntity> asignacionCoordinadorOptional =
+                asignacionCoordinadorRepository
+                        .findBySolicitud_IdSolicitud(idSolicitud);
+
+        Optional<ProgramacionEntity> programacionOptional =
+                programacionRepository
+                        .findFirstBySolicitud_IdSolicitudOrderByFechaRegistroDesc(idSolicitud);
+
+        List<DetalleEntity> detalles = programacionOptional
+                .map(p -> detalleRepository
+                        .findByProgramacion_IdProgramacionAndEstadoTrueOrderByIdDetalleAsc(
+                                p.getIdProgramacion()
+                        ))
+                .orElse(Collections.emptyList());
+
+        List<CargaEntity> cargas = programacionOptional
+                .map(p -> cargaRepository
+                        .findByProgramacion_IdProgramacionOrderByFechaRegistroDesc(
+                                p.getIdProgramacion()
+                        ))
+                .orElse(Collections.emptyList());
+
+        BigDecimal pesoTotal = cargas.stream()
+                .map(CargaEntity::getPesoLibras)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        List<MaterialRecuperadoResponse> materiales = cargas.stream()
+                .flatMap(carga -> articuloRecuperadoRepository
+                        .findByCarga_IdCarga(carga.getIdCarga())
+                        .stream())
+                .map(articulo -> MaterialRecuperadoResponse.builder()
+                        .idArticuloRecuperado(articulo.getIdArticuloRecuperado())
+                        .articulo(articulo.getArticulo())
+                        .cantidad(articulo.getCantidad())
+                        .build())
+                .toList();
+
+        Optional<PagoInicialEntity> pagoInicialOptional =
+                pagoInicialRepository
+                        .findFirstBySolicitud_IdSolicitudOrderByIdPagoInicialDesc(idSolicitud);
+
+        Optional<PagoTotalEntity> pagoTotalOptional =
+                pagoTotalRepository
+                        .findFirstBySolicitud_IdSolicitudOrderByIdPagoTotalDesc(idSolicitud);
+
+        PagoInicialResponse pagoInicial = pagoInicialOptional
+                .map(p -> PagoInicialResponse.builder()
+                        .estado(p.getEstado().name())
+                        .monto(p.getMonto())
+                        .fechaRegistro(
+                                p.getFechaOperacion() == null
+                                        ? null
+                                        : p.getHoraOperacion() == null
+                                        ? p.getFechaOperacion().atStartOfDay()
+                                        : p.getFechaOperacion().atTime(p.getHoraOperacion())
+                        )
+                        .build())
+                .orElse(null);
+
+        PagoTotalResponse pagoTotal = pagoTotalOptional
+                .map(p -> PagoTotalResponse.builder()
+                        .estado(p.getEstado().name())
+                        .monto(p.getMonto())
+                        .fechaRegistro(
+                                p.getFechaOperacion() == null
+                                        ? null
+                                        : p.getHoraOperacion() == null
+                                        ? p.getFechaOperacion().atStartOfDay()
+                                        : p.getFechaOperacion().atTime(p.getHoraOperacion())
+                        )
+                        .build())
+                .orElse(null);
+
+        List<UnidadProgramacionResponse> unidades = detalles.stream()
+                .map(detalle -> UnidadProgramacionResponse.builder()
+                        .idDetalle(detalle.getIdDetalle())
+                        .idTransportista(detalle.getTransportista().getIdUsuario())
+                        .nombreTransportista(detalle.getTransportista().getNombre())
+                        .apellidoTransportista(detalle.getTransportista().getApellido())
+                        .celular(detalle.getTransportista().getCelular())
+                        .idVehiculo(detalle.getVehiculo().getIdVehiculo())
+                        .placa(detalle.getVehiculo().getPlaca())
+                        .marca(detalle.getVehiculo().getMarca())
+                        .modelo(detalle.getVehiculo().getModelo())
+                        .tipoVehiculo(detalle.getVehiculo().getTipo().name())
+                        .capacidadLibras(detalle.getVehiculo().getCapacidadLibras())
+                        .build())
+                .toList();
+
+        boolean pagoInicialCompletado = switch (estadoSolicitud) {
+            case PAGO_INICIAL_CONFIRMADO,
+                 PAGO_TOTAL_PENDIENTE,
+                 PAGO_TOTAL_EFECTUADO,
+                 PAGO_TOTAL_CONFIRMADO,
+                 PROGRAMADO,
+                 FINALIZADO -> true;
+            default -> false;
+        };
+
+        boolean pagoTotalCompletado = switch (estadoSolicitud) {
+            case PAGO_TOTAL_CONFIRMADO, PROGRAMADO, FINALIZADO -> true;
+            default -> false;
+        };
+
+        String estadoFaseInicial = pagoInicialCompletado
+                ? "COMPLETADA"
+                : estadoSolicitud == EstadoSolicitud.PAGO_INICIAL_EFECTUADO
+                ? "EN_REVISION"
+                : estadoSolicitud == EstadoSolicitud.PAGO_INICIAL_PENDIENTE
+                ? "PENDIENTE"
+                : "NO_INICIADA";
+
+        String estadoFaseTotal = pagoTotalCompletado
+                ? "COMPLETADA"
+                : estadoSolicitud == EstadoSolicitud.PAGO_TOTAL_EFECTUADO
+                ? "EN_REVISION"
+                : estadoSolicitud == EstadoSolicitud.PAGO_TOTAL_PENDIENTE
+                ? "PENDIENTE"
+                : "NO_INICIADA";
+
+        String estadoFaseProgramacion = programacionOptional
+                .map(p -> p.getEstado() == EstadoProgramacion.FINALIZADO
+                        ? "COMPLETADA"
+                        : "EN_PROCESO")
+                .orElse("NO_INICIADA");
+
+        String estadoFaseEjecucion = programacionOptional
+                .map(p -> p.getEstado() == EstadoProgramacion.ASIGNADO
+                        ? "PENDIENTE"
+                        : p.getEstado() == EstadoProgramacion.FINALIZADO
+                        ? "COMPLETADA"
+                        : "EN_PROCESO")
+                .orElse("NO_INICIADA");
+
+        List<FaseSolicitudResponse> fases = List.of(
+                FaseSolicitudResponse.builder()
+                        .nombreFase("Registro de solicitud")
+                        .descripcion("Registro de la solicitud del cliente")
+                        .estado("COMPLETADA")
+                        .fechaInicio(entity.getFechaRegistro())
+                        .build(),
+
+                FaseSolicitudResponse.builder()
+                        .nombreFase("Pago inicial")
+                        .descripcion("Registro y revisión del pago inicial")
+                        .estado(estadoFaseInicial)
+                        .fechaInicio(pagoInicial == null ? null : pagoInicial.getFechaRegistro())
+                        .build(),
+
+                FaseSolicitudResponse.builder()
+                        .nombreFase("Pago total")
+                        .descripcion("Registro y revisión del pago total")
+                        .estado(estadoFaseTotal)
+                        .fechaInicio(pagoTotal == null ? null : pagoTotal.getFechaRegistro())
+                        .build(),
+
+                FaseSolicitudResponse.builder()
+                        .nombreFase("Programación")
+                        .descripcion("Asignación de fecha y unidades para el recojo")
+                        .estado(estadoFaseProgramacion)
+                        .fechaInicio(programacionOptional.map(ProgramacionEntity::getFechaRegistro).orElse(null))
+                        .fechaFinalizacion(programacionOptional.map(ProgramacionEntity::getFechaFinalizacion).orElse(null))
+                        .build(),
+
+                FaseSolicitudResponse.builder()
+                        .nombreFase("Ejecución del recojo")
+                        .descripcion("Registro de salidas, cargas y materiales recuperados")
+                        .estado(estadoFaseEjecucion)
+                        .build(),
+
+                FaseSolicitudResponse.builder()
+                        .nombreFase("Finalización")
+                        .descripcion("Finalización de la solicitud y liberación de recursos")
+                        .estado(estadoSolicitud == EstadoSolicitud.FINALIZADO
+                                ? "COMPLETADA"
+                                : "NO_INICIADA")
+                        .fechaFinalizacion(entity.getFechaFinalizacion())
+                        .build()
+        );
+
+        EjecucionRecojoResponse ejecucion = programacionOptional
+                .filter(p -> p.getEstado() != EstadoProgramacion.ASIGNADO)
+                .map(p -> EjecucionRecojoResponse.builder()
+                        .estado(p.getEstado().name())
+                        .pesoTotal(pesoTotal)
+                        .materiales(materiales)
+                        .build())
+                .orElse(null);
+
+        FinalizacionSolicitudResponse finalizacion = estadoSolicitud == EstadoSolicitud.FINALIZADO
+                ? FinalizacionSolicitudResponse.builder()
+                .estado(estadoSolicitud.name())
+                .fechaFinalizacion(entity.getFechaFinalizacion())
+                .build()
+                : null;
+
+        SolicitudDetalleResponse response = SolicitudDetalleResponse.builder()
                 .idSolicitud(entity.getIdSolicitud())
                 .titulo(entity.getTitulo())
                 .descripcion(entity.getDescripcion())
                 .ubicacion(entity.getUbicacion())
                 .fechaRegistro(entity.getFechaRegistro())
                 .fechaFinalizacion(entity.getFechaFinalizacion())
-                .estado(entity.getEstado().name())
+                .estado(estadoSolicitud.name())
+                .nombreUsuario(entity.getUsuario().getNombre())
+                .apellidoUsuario(entity.getUsuario().getApellido())
+                .correo(entity.getUsuario().getCorreo())
+                .celular(entity.getUsuario().getCelular())
+                .idCoordinador(
+                        asignacionCoordinadorOptional
+                                .map(a -> a.getCoordinador().getIdUsuario())
+                                .orElse(null)
+                )
+                .nombreCoordinador(
+                        asignacionCoordinadorOptional
+                                .map(a -> a.getCoordinador().getNombre() + " " +
+                                        a.getCoordinador().getApellido())
+                                .orElse(null)
+                )
+                .cantidadUnidades(
+                        recomendacionOptional
+                                .map(RecomendacionEntity::getCantidadUnidades)
+                                .orElse(null)
+                )
+                .razonCantidadUnidades(
+                        recomendacionOptional
+                                .map(RecomendacionEntity::getRazonCantidadUnidades)
+                                .orElse(null)
+                )
+                .equipoSeguridad(
+                        recomendacionOptional
+                                .map(RecomendacionEntity::getEquipoSeguridad)
+                                .orElse(null)
+                )
+                .otrasRecomendaciones(
+                        recomendacionOptional
+                                .map(RecomendacionEntity::getOtrasRecomendaciones)
+                                .orElse(null)
+                )
+                .fases(fases)
+                .pagoInicial(pagoInicial)
+                .pagoTotal(pagoTotal)
+                .programacion(
+                        programacionOptional.map(p -> ProgramacionDetalleResponse.builder()
+                                .idProgramacion(p.getIdProgramacion())
+                                .estado(p.getEstado().name())
+                                .fechaRegistro(p.getFechaRegistro())
+                                .fechaEjecucion(p.getFechaEjecucion())
+                                .fechaFinalizacion(p.getFechaFinalizacion())
+                                .unidades(unidades)
+                                .build()
+                        ).orElse(null)
+                )
+                .ejecucion(ejecucion)
+                .finalizacion(finalizacion)
                 .build();
 
         return ApiResponse.success(
@@ -253,7 +509,7 @@ public class SolicitudServiceImpl implements SolicitudService {
         );
 
         Page<SolicitudEntity> solicitudesPage = solicitudRepository
-                .findByEstado(EstadoSolicitud.PENDIENTE, pageable);
+                .findByEstadoOrderByIdSolicitudDesc(EstadoSolicitud.PENDIENTE, pageable);
 
         List<SolicitudResponse> response = solicitudesPage.getContent()
                 .stream()
@@ -387,7 +643,7 @@ public class SolicitudServiceImpl implements SolicitudService {
         );
 
         Page<SolicitudEntity> solicitudesPage = solicitudRepository
-                .findByEstado(EstadoSolicitud.PAGO_INICIAL_EFECTUADO, pageable);
+                .findByEstadoOrderByIdSolicitudDesc(EstadoSolicitud.PAGO_INICIAL_EFECTUADO, pageable);
 
         List<SolicitudResponse> response = solicitudesPage.getContent()
                 .stream()
@@ -495,7 +751,7 @@ public class SolicitudServiceImpl implements SolicitudService {
         );
 
         Page<SolicitudEntity> solicitudesPage =
-                solicitudRepository.findByEstadoIn(estados, pageable);
+                solicitudRepository.findByEstadoInOrderByIdSolicitudDesc(estados, pageable);
 
         List<SolicitudResponse> response = solicitudesPage.getContent()
                 .stream()
@@ -635,7 +891,7 @@ public class SolicitudServiceImpl implements SolicitudService {
         );
 
         Page<SolicitudEntity> solicitudesPage =
-                solicitudRepository.findByEstadoIn(estados, pageable);
+                solicitudRepository.findByEstadoInOrderByIdSolicitudDesc(estados, pageable);
 
         List<SolicitudResponse> response = solicitudesPage.getContent()
                 .stream()

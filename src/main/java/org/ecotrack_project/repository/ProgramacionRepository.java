@@ -22,7 +22,7 @@ public interface ProgramacionRepository extends JpaRepository<ProgramacionEntity
     Optional<ProgramacionEntity> findFirstByJefeUnidad_IdUsuarioOrderByFechaRegistroDescIdProgramacionDesc(int idJefeUnidad);
     boolean existsBySolicitud_IdSolicitud(int idSolicitud);
     long countByFechaEjecucionGreaterThanEqualAndFechaEjecucionLessThan(LocalDateTime inicio, LocalDateTime fin);
-    Page<ProgramacionEntity> findByFechaEjecucionGreaterThanEqualAndFechaEjecucionLessThan(LocalDateTime inicio, LocalDateTime fin, Pageable pageable);
+    Page<ProgramacionEntity> findByFechaEjecucionGreaterThanEqualAndFechaEjecucionLessThanOrderByIdProgramacionDesc(LocalDateTime inicio, LocalDateTime fin, Pageable pageable);
     @Query("""
         SELECT COALESCE(SUM(r.cantidadUnidades), 0)
         FROM ProgramacionEntity p
@@ -36,7 +36,7 @@ public interface ProgramacionRepository extends JpaRepository<ProgramacionEntity
             @Param("inicio") LocalDateTime inicio,
             @Param("fin") LocalDateTime fin
     );
-    Page<ProgramacionEntity> findByJefeUnidad_IdUsuario(int idJefeUnidad, Pageable pageable);
+    Page<ProgramacionEntity> findByJefeUnidad_IdUsuarioOrderByIdProgramacionDesc(int idJefeUnidad, Pageable pageable);
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM ProgramacionEntity p WHERE p.idProgramacion = :idProgramacion")
     Optional<ProgramacionEntity> findByIdForUpdate(
@@ -81,10 +81,7 @@ public interface ProgramacionRepository extends JpaRepository<ProgramacionEntity
         )
     """
     )
-    Page<ProgramacionEntity> findByTransportistaAsignado(
-            @Param("idTransportista") int idTransportista,
-            Pageable pageable
-    );
+    Page<ProgramacionEntity> findByTransportistaAsignado(@Param("idTransportista") int idTransportista, Pageable pageable);
 
     long countByEstadoIn(List<EstadoProgramacion> estados);
     Page<ProgramacionEntity> findByEstadoIn(List<EstadoProgramacion> estados, Pageable pageable);
@@ -111,4 +108,5 @@ public interface ProgramacionRepository extends JpaRepository<ProgramacionEntity
             @Param("idTransportista") int idTransportista,
             @Param("estado") EstadoProgramacion estado
     );
+    Optional<ProgramacionEntity> findFirstBySolicitud_IdSolicitudOrderByFechaRegistroDesc(int idSolicitud);
 }

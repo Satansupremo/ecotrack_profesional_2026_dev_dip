@@ -19,14 +19,14 @@ import java.util.Optional;
 public interface SolicitudRepository extends JpaRepository<SolicitudEntity, Integer> {
 
     long countByUsuario_IdUsuario(int idUsuario);
-    Page<SolicitudEntity> findByUsuario_IdUsuario(int idUsuario, Pageable pageable);
+    Page<SolicitudEntity> findByUsuario_IdUsuarioOrderByIdSolicitudDesc(int idUsuario, Pageable pageable);
     Optional<SolicitudEntity> findByIdSolicitudAndUsuario_IdUsuario(int idSolicitud, int idUsuario);
     long countByEstado(EstadoSolicitud estado);
-    Page<SolicitudEntity> findByEstado(EstadoSolicitud estado, Pageable pageable);
+    Page<SolicitudEntity> findByEstadoOrderByIdSolicitudDesc(EstadoSolicitud estado, Pageable pageable);
     Optional<SolicitudEntity> findByIdSolicitudAndEstado(int idSolicitud, EstadoSolicitud estado);
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT s FROM SolicitudEntity s WHERE s.idSolicitud = :idSolicitud")
     Optional<SolicitudEntity> findByIdForUpdate(@Param("idSolicitud") int idSolicitud);
     long countByEstadoIn(List<EstadoSolicitud> estados);
-    Page<SolicitudEntity> findByEstadoIn(List<EstadoSolicitud> estados, Pageable pageable);
+    Page<SolicitudEntity> findByEstadoInOrderByIdSolicitudDesc(List<EstadoSolicitud> estados, Pageable pageable);
 }

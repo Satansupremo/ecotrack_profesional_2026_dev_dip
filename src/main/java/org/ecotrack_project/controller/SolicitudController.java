@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.ecotrack_project.dto.request.SolicitudRequest;
 import org.ecotrack_project.dto.response.ApiResponse;
+import org.ecotrack_project.dto.response.SolicitudDetalleResponse;
 import org.ecotrack_project.dto.response.SolicitudResponse;
 import org.ecotrack_project.service.SolicitudService;
 import jakarta.validation.Valid;
@@ -68,7 +69,7 @@ public class SolicitudController {
     }
 
     @GetMapping("/buscar/{idSolicitud}")
-    public ResponseEntity<ApiResponse<SolicitudResponse>> obtenerSolicitud(
+    public ResponseEntity<ApiResponse<SolicitudDetalleResponse>> obtenerSolicitud(
             @PathVariable int idSolicitud) {
 
         var response = solicitudService.obtenerSolicitud(idSolicitud);

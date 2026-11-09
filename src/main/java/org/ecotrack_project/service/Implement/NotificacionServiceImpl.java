@@ -87,7 +87,7 @@ public class NotificacionServiceImpl implements NotificacionService {
 
         Page<NotificacionEntity> resultado =
                 notificacionRepository
-                        .findByUsuario_UsernameOrderByIdNotificacionAsc(
+                        .findByUsuario_UsernameOrderByIdNotificacionDesc(
                                 username,
                                 pageable
                         );

@@ -17,7 +17,6 @@ public class FinalizarCargaRequest {
     @NotNull(message = "El identificador de la carga es obligatorio.")
     private Integer idCarga;
 
-    @NotEmpty(message = "Debe registrar al menos un artículo recuperado.")
     @Valid
     private List<ArticuloRecuperadoRequest> articulos;
 }

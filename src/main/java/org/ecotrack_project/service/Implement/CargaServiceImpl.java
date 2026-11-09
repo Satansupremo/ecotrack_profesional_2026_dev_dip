@@ -188,22 +188,20 @@ public class CargaServiceImpl implements CargaService {
             return ApiResponse.error("No tienes permisos para finalizar cargas.");
         }
 
-        if (request.getIdCarga() == null
-                || request.getArticulos() == null
-                || request.getArticulos().isEmpty()) {
-            return ApiResponse.error("Debes registrar al menos un artículo recuperado.");
+        if (request.getIdCarga() == null) {
+            return ApiResponse.error("Debes seleccionar una carga.");
         }
 
-        for (ArticuloRecuperadoRequest articulo : request.getArticulos()) {
+        if (request.getArticulos() != null) {
+            for (ArticuloRecuperadoRequest articulo : request.getArticulos()) {
 
-            if (articulo == null
-                    || articulo.getArticulo() == null
-                    || articulo.getArticulo().isBlank()) {
-                return ApiResponse.error("El nombre del artículo es obligatorio.");
-            }
+                if (articulo == null) {
+                    return ApiResponse.error("El artículo enviado no es válido.");
+                }
 
-            if (articulo.getCantidad() == null || articulo.getCantidad() <= 0) {
-                return ApiResponse.error("La cantidad de cada artículo debe ser mayor que cero.");
+                if (articulo.getCantidad() != null && articulo.getCantidad() <= 0) {
+                    return ApiResponse.error("La cantidad de cada artículo debe ser mayor que cero.");
+                }
             }
         }
 
@@ -243,16 +241,19 @@ public class CargaServiceImpl implements CargaService {
             return ApiResponse.error("La carga ya contiene artículos registrados.");
         }
 
-        List<ArticuloRecuperadoEntity> articulos = request.getArticulos()
-                .stream()
-                .map(articulo -> ArticuloRecuperadoEntity.builder()
-                        .articulo(articulo.getArticulo().trim())
-                        .cantidad(articulo.getCantidad())
-                        .carga(carga)
-                        .build())
-                .toList();
+        if (request.getArticulos() != null && !request.getArticulos().isEmpty()) {
 
-        articuloRecuperadoRepository.saveAllAndFlush(articulos);
+            List<ArticuloRecuperadoEntity> articulos = request.getArticulos()
+                    .stream()
+                    .map(articulo -> ArticuloRecuperadoEntity.builder()
+                            .articulo(articulo.getArticulo())
+                            .cantidad(articulo.getCantidad())
+                            .carga(carga)
+                            .build())
+                    .toList();
+
+            articuloRecuperadoRepository.saveAllAndFlush(articulos);
+        }
 
         carga.setEstado(EstadoCarga.REGISTRADA);
         cargaRepository.saveAndFlush(carga);

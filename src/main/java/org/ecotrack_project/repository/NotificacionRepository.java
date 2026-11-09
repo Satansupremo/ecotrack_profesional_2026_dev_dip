@@ -1,4 +1,3 @@
-
 package org.ecotrack_project.repository;
 
 import org.ecotrack_project.entity.NotificacionEntity;
@@ -10,7 +9,7 @@ import java.util.Optional;
 
 public interface NotificacionRepository extends JpaRepository<NotificacionEntity, Integer> {
 
-    Page<NotificacionEntity> findByUsuario_UsernameOrderByIdNotificacionAsc(String username, Pageable pageable);
+    Page<NotificacionEntity> findByUsuario_UsernameOrderByIdNotificacionDesc(String username, Pageable pageable);
     long countByUsuario_UsernameAndEstadoFalse(String username);
     Optional<NotificacionEntity> findByIdNotificacionAndUsuario_Username(int idNotificacion, String username);
     long countByUsuario_Username(String username);

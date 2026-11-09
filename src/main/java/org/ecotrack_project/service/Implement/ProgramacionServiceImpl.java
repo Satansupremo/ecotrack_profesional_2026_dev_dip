@@ -148,21 +148,37 @@ public class ProgramacionServiceImpl implements ProgramacionService {
         solicitud.setEstado(EstadoSolicitud.PROGRAMADO);
         solicitudRepository.save(solicitud);
 
-        String mensaje = "¡Buenas noticias! Tu solicitud N.° " +
+        String fechaFormateada = fechaEjecucion.format(
+                DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        );
+
+        String mensajeCliente = "¡Buenas noticias! Tu solicitud N.° " +
                 solicitud.getIdSolicitud() +
                 " ya tiene una fecha programada para el " +
-                fechaEjecucion.format(
-                        DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                ) +
+                fechaFormateada +
                 ". Te mantendremos informado ante cualquier novedad relacionada con el recojo.";
 
-        NotificacionEntity notificacion = NotificacionEntity.builder()
-                .descripcion(mensaje)
+        NotificacionEntity notificacionCliente = NotificacionEntity.builder()
+                .descripcion(mensajeCliente)
                 .estado(false)
                 .usuario(solicitud.getUsuario())
                 .build();
 
-        notificacionRepository.save(notificacion);
+        notificacionRepository.save(notificacionCliente);
+
+        String mensajeJefeUnidad = "Se te ha asignado una nueva programación correspondiente a la solicitud N.° " +
+                solicitud.getIdSolicitud() +
+                ", cuya ejecución está programada para el " +
+                fechaFormateada +
+                ". Revisa los detalles de la programación para coordinar el recojo.";
+
+        NotificacionEntity notificacionJefeUnidad = NotificacionEntity.builder()
+                .descripcion(mensajeJefeUnidad)
+                .estado(false)
+                .usuario(jefeUnidadOptional.get())
+                .build();
+
+        notificacionRepository.save(notificacionJefeUnidad);
 
         return ApiResponse.success(
                 programacionGuardada.getIdProgramacion(),
@@ -244,7 +260,7 @@ public class ProgramacionServiceImpl implements ProgramacionService {
 
         Page<ProgramacionEntity> programaciones =
                 programacionRepository
-                        .findByFechaEjecucionGreaterThanEqualAndFechaEjecucionLessThan(
+                        .findByFechaEjecucionGreaterThanEqualAndFechaEjecucionLessThanOrderByIdProgramacionDesc(
                                 inicio, fin, pageable
                         );
 
@@ -406,7 +422,7 @@ public class ProgramacionServiceImpl implements ProgramacionService {
 
         if (usuario.getRol() == Rol.JEFE_UNIDAD) {
 
-            programaciones = programacionRepository.findByJefeUnidad_IdUsuario(
+            programaciones = programacionRepository.findByJefeUnidad_IdUsuarioOrderByIdProgramacionDesc(
                     usuario.getIdUsuario(),
                     pageable
             );
