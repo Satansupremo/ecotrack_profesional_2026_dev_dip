@@ -163,6 +163,9 @@ public class SecurityConfig {
                                 "/api/pago-total/pago/registrar/**"
                         ).authenticated()
 
+                        .requestMatchers("/api/contrato/**")
+                        .authenticated()
+
                         .requestMatchers(
                                 "/api/asignacion-inicial/registrar/**",
                                 "/api/asignacion-inicial/validar/**",

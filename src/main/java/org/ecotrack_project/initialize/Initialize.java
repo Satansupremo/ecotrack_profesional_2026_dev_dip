@@ -7,6 +7,7 @@ public class Initialize {
     public static int CANTIDAD_INTENTO_PAGO_FINAL;
     public static String MENSAJE_CONFIRMACION_PAGO_INICIAL;
     public static String MENSAJE_RECHAZO_PAGO_INICIAL;
+    public static String ADMINISTRADOR;
     static{
         TAMANIO_PAGINA = 7;
         CANTIDAD_INTENTO_PAGO_INICIAL = 3;
@@ -20,6 +21,7 @@ public class Initialize {
         MENSAJE_RECHAZO_PAGO_INICIAL = "Su solicitud ha sido rechazada definitivamente porque alcanzó "
                 + "el límite máximo de tres intentos de pago inicial. "
                 + "Motivo del último rechazo: ";
+        ADMINISTRADOR = "Eduardo Cisneros Luna";
     }
 }
 
