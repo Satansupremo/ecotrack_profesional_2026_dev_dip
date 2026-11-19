@@ -6,10 +6,12 @@ import org.ecotrack_project.dto.response.ApiResponse;
 import org.ecotrack_project.dto.response.AsignacionTotalResponse;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+
 @Service
 public interface AsignacionTotalService {
 
     ApiResponse<Integer> registrarAsignacionTotal(int idSolicitud, AsignacionTotalRequest asignacionRequest, RecomendacionRequest recomendacionRequest);
     ApiResponse<AsignacionTotalResponse> obtenerAsignacionTotal(int idSolicitud);
-    ApiResponse<Void> verificarAsignacionTotal(int idSolicitud);
+    ApiResponse<BigDecimal> verificarAsignacionTotal(int idSolicitud);
 }

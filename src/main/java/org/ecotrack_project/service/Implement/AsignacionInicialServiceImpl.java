@@ -6,6 +6,7 @@ import org.ecotrack_project.dto.request.AsignacionInicialRequest;
 import org.ecotrack_project.dto.response.ApiResponse;
 import org.ecotrack_project.dto.response.AsignacionInicialResponse;
 import org.ecotrack_project.entity.*;
+import org.ecotrack_project.enums.EstadoPagoInicial;
 import org.ecotrack_project.enums.EstadoSolicitud;
 import org.ecotrack_project.enums.Rol;
 import org.ecotrack_project.repository.*;
@@ -14,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.swing.text.html.Option;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -25,6 +27,7 @@ public class AsignacionInicialServiceImpl implements AsignacionInicialService {
     private final SolicitudRepository solicitudRepository;
     private final UsuarioRepository usuarioRepository;
     private final NotificacionRepository notificacionRepository;
+    private final PagoInicialRepository pagoInicialRepository;
 
     @Override
     @Transactional
@@ -92,6 +95,10 @@ public class AsignacionInicialServiceImpl implements AsignacionInicialService {
     @Transactional(readOnly = true)
     public ApiResponse<AsignacionInicialResponse> obtenerAsignacionInicial(int idSolicitud) {
 
+        Optional<PagoInicialEntity> pagoInicialOptional =
+                pagoInicialRepository.findBySolicitud_IdSolicitudAndEstado(
+                        idSolicitud, EstadoPagoInicial.CONFIRMADO);
+
         Optional<AsignacionInicialEntity> asignacionOptional =
                 asignacionInicialRepository.findBySolicitud_IdSolicitud(idSolicitud);
 
@@ -103,7 +110,10 @@ public class AsignacionInicialServiceImpl implements AsignacionInicialService {
 
         AsignacionInicialResponse response = AsignacionInicialResponse.builder()
                 .idAsignacionInicial(asignacion.getIdAsignacionInicial())
-                .montoAsignadoInicial(asignacion.getMontoAsignadoInicial())
+                .montoAsignadoInicial(
+                        pagoInicialOptional.isPresent()
+                                ? pagoInicialOptional.get().getMonto()
+                                : asignacion.getMontoAsignadoInicial())
                 .razon(asignacion.getRazon())
                 .build();
 

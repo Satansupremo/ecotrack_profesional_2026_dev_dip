@@ -5,10 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.ecotrack_project.dto.request.SolicitudRequest;
 import org.ecotrack_project.dto.response.*;
 import org.ecotrack_project.entity.*;
-import org.ecotrack_project.enums.EstadoCarga;
-import org.ecotrack_project.enums.EstadoProgramacion;
-import org.ecotrack_project.enums.EstadoSolicitud;
-import org.ecotrack_project.enums.Rol;
+import org.ecotrack_project.enums.*;
 import org.ecotrack_project.initialize.Initialize;
 import org.ecotrack_project.repository.*;
 import org.ecotrack_project.service.SolicitudService;
@@ -19,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.swing.text.html.Option;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -34,6 +32,7 @@ public class SolicitudServiceImpl implements SolicitudService {
     private final SolicitudRepository solicitudRepository;
     private final UsuarioRepository usuarioRepository;
     private final AsignacionCoordinadorRepository asignacionCoordinadorRepository;
+    private final AsignacionTotalRepository asignacionTotalRepository;
     private final RecomendacionRepository recomendacionRepository;
     private final ProgramacionRepository programacionRepository;
     private final DetalleRepository detalleRepository;
@@ -41,6 +40,7 @@ public class SolicitudServiceImpl implements SolicitudService {
     private final ArticuloRecuperadoRepository articuloRecuperadoRepository;
     private final PagoInicialRepository pagoInicialRepository;
     private final PagoTotalRepository pagoTotalRepository;
+    private final NotificacionRepository notificacionRepository;
 
     private Optional<UsuarioEntity> obtenerUsuarioAutenticado() {
         String username = SecurityContextHolder.getContext()
@@ -240,10 +240,12 @@ public class SolicitudServiceImpl implements SolicitudService {
                         .build())
                 .orElse(null);
 
+        AsignacionTotalEntity asignacionTotal = asignacionTotalRepository.findBySolicitud_IdSolicitud(idSolicitud).orElse(null);
+
         PagoTotalResponse pagoTotal = pagoTotalOptional
                 .map(p -> PagoTotalResponse.builder()
                         .estado(p.getEstado().name())
-                        .monto(p.getMonto())
+                        .monto(asignacionTotal.getMontoAsignadoTotal())
                         .fechaRegistro(
                                 p.getFechaOperacion() == null
                                         ? null
@@ -527,6 +529,58 @@ public class SolicitudServiceImpl implements SolicitudService {
         return ApiResponse.success(
                 response,
                 "Lista de solicitudes pendientes obtenida correctamente"
+        );
+    }
+
+    @Override
+    @Transactional
+    public ApiResponse<Integer> cancelarSolicitud(int idSolicitud) {
+
+        Optional<SolicitudEntity> solicitudOptional =
+                solicitudRepository.findById(idSolicitud);
+
+        if (solicitudOptional.isEmpty()) {
+            return ApiResponse.error("La solicitud seleccionada no existe.");
+        }
+
+        Optional<UsuarioEntity> usuarioOptional = obtenerUsuarioAutenticado();
+
+        if (usuarioOptional.isEmpty()) {
+            return ApiResponse.error("No existe el usuario seleccionado.");
+        }
+
+        SolicitudEntity solicitud = solicitudOptional.get();
+        UsuarioEntity usuario = usuarioOptional.get();
+
+        if (!Objects.equals(
+                solicitud.getUsuario().getIdUsuario(),
+                usuario.getIdUsuario())) {
+            return ApiResponse.error("La solicitud no pertenece a ese usuario.");
+        }
+
+        if (solicitud.getEstado() != EstadoSolicitud.PAGO_TOTAL_PENDIENTE) {
+            return ApiResponse.error(
+                    "La solicitud no se encuentra en un estado que permita su cancelación."
+            );
+        }
+
+        solicitud.setEstado(EstadoSolicitud.CANCELADO);
+
+        String mensajeCliente = "¡Aviso importante! Tu solicitud N.° " +
+                solicitud.getIdSolicitud() +
+                " ha sido cancelada. Si tienes alguna consulta o deseas realizar una nueva solicitud, puedes hacerlo desde nuestra plataforma.";
+
+        NotificacionEntity notificacion = NotificacionEntity.builder()
+                .descripcion(mensajeCliente)
+                .estado(false)
+                .usuario(usuario)
+                .build();
+
+        notificacionRepository.save(notificacion);
+
+        return ApiResponse.success(
+                solicitud.getIdSolicitud(),
+                "La solicitud ha sido cancelada correctamente."
         );
     }
 

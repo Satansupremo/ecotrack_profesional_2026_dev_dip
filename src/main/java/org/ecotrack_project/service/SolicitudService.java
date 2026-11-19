@@ -20,10 +20,7 @@ public interface SolicitudService {
 
     ApiResponse<SolicitudDetalleResponse> obtenerSolicitud(int idSolicitud);
 
-
-
-
-
+    ApiResponse<Integer> cancelarSolicitud(int idSolicitud);
     ApiResponse<Integer> obtenerTotalSolicitudesPendientes();
     ApiResponse<Integer> obtenerTotalPaginasPendientes();
     ApiResponse<List<SolicitudResponse>> listarSolicitudesPendientes(int pagina);

@@ -60,7 +60,7 @@ public class PagoTotalServiceImpl implements PagoTotalService {
         }
 
         PagoTotalEntity pago = PagoTotalEntity.builder()
-                .monto(asignacion.getMontoPorCobrar())
+                .monto(request.getMonto())
                 .fechaOperacion(request.getFechaOperacion())
                 .horaOperacion(request.getHoraOperacion())
                 .numeroOperacion(request.getNumeroOperacion())

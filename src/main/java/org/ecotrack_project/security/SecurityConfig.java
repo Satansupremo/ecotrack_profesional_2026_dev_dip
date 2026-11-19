@@ -146,6 +146,10 @@ public class SecurityConfig {
                                 "/api/reserva-unidad/**"
                         ).hasAnyRole("JEFE_UNIDAD", "ADMINISTRADOR")
 
+
+                        .requestMatchers("/api/solicitud/cancelar/**")
+                        .authenticated()
+
                         .requestMatchers(
                                 "/api/solicitud/pendientes/**",
                                 "/api/solicitud/pie/**",

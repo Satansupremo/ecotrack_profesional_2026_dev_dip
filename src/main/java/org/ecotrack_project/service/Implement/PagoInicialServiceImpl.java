@@ -50,7 +50,7 @@ public class PagoInicialServiceImpl implements PagoInicialService {
             return ApiResponse.error("No se encontró la asignación inicial de esta solicitud");
         }
 
-        AsignacionInicialEntity asignacion = asignacionOptional.get();
+        //AsignacionInicialEntity asignacion = asignacionOptional.get();
 
         Optional<MedioPagoEntity> medioPagoOptional =
                 medioPagoRepository.findById(request.getIdMedioPago());
@@ -60,7 +60,7 @@ public class PagoInicialServiceImpl implements PagoInicialService {
         }
 
         PagoInicialEntity pago = PagoInicialEntity.builder()
-                .monto(asignacion.getMontoAsignadoInicial())
+                .monto(request.getMonto())
                 .fechaOperacion(request.getFechaOperacion())
                 .horaOperacion(request.getHoraOperacion())
                 .numeroOperacion(request.getNumeroOperacion())

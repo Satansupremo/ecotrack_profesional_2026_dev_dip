@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+
 @RestController
 @RequestMapping("/api/asignacion-total")
 @SecurityRequirement(name = "bearerAuth")
@@ -53,7 +55,7 @@ public class AsignacionTotalController {
 
 
     @GetMapping("/verificar/{idSolicitud}")
-    public ResponseEntity<ApiResponse<Void>> verificarAsignacionTotal(
+    public ResponseEntity<ApiResponse<BigDecimal>> verificarAsignacionTotal(
             @PathVariable int idSolicitud) {
 
         var response = asignacionTotalService.verificarAsignacionTotal(idSolicitud);

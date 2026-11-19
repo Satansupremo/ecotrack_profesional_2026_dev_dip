@@ -190,7 +190,7 @@ public class AsignacionTotalServiceImpl implements AsignacionTotalService {
 
     @Override
     @Transactional
-    public ApiResponse<Void> verificarAsignacionTotal(int idSolicitud) {
+    public ApiResponse<BigDecimal> verificarAsignacionTotal(int idSolicitud) {
 
         String username = SecurityContextHolder.getContext()
                 .getAuthentication().getName();
@@ -248,8 +248,14 @@ public class AsignacionTotalServiceImpl implements AsignacionTotalService {
             );
         }
 
+        Optional<PagoInicialEntity> pagoInicialOptional = pagoInicialRepository.findBySolicitud_IdSolicitudAndEstado(idSolicitud, EstadoPagoInicial.CONFIRMADO);
+        if(pagoInicialOptional.isEmpty()){
+            return ApiResponse.error("No existe un pago inicial confirmado para esta solicitud");
+        }
+
+        PagoInicialEntity pagoInicial = pagoInicialOptional.get();
         return ApiResponse.success(
-                null,
+                pagoInicial.getMonto(),
                 "Puedes continuar con la asignación del pago total"
         );
     }

@@ -258,4 +258,16 @@ public class SolicitudController {
 
         return ResponseEntity.badRequest().body(response);
     }
+
+    @PutMapping("/cancelar/{idSolicitud}")
+    public ResponseEntity<ApiResponse<Integer>> cancelarSolicitud(
+            @PathVariable int idSolicitud) {
+
+        var response = solicitudService.cancelarSolicitud(idSolicitud);
+
+        if (response.isSuccess())
+            return ResponseEntity.ok(response);
+
+        return ResponseEntity.badRequest().body(response);
+    }
 }
