@@ -38,7 +38,7 @@ public class UsuarioEntity {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "dni", nullable = false, unique = true)
+    @Column(name = "dni", nullable = false)
     private String dni;
 
     @Column(name = "estado", nullable = false)

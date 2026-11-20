@@ -185,7 +185,7 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 "/api/asignacion-coordinador/**"
-                        ).hasRole("COORDINADOR")
+                        ).hasAnyRole("COORDINADOR", "ADMINISTRADOR")
 
                         .requestMatchers("/api/solicitud/**")
                         .authenticated()

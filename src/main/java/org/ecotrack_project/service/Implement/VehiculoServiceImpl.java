@@ -48,9 +48,15 @@ public class VehiculoServiceImpl implements VehiculoService {
 
     @Override
     public ApiResponse<Integer> registrarVehiculo(VehiculoRequest vehiculoRequest) {
+        String placaNormalizada = vehiculoRequest.getPlaca().trim().toUpperCase();
+
+        if (vehiculoRepository.existsByPlaca(placaNormalizada)) {
+            return ApiResponse.error("La placa " + placaNormalizada + " ya se encuentra registrada.");
+        }
+
         VehiculoEntity entity = VehiculoEntity.builder()
                 .fechaRegistro(LocalDateTime.now())
-                .placa(vehiculoRequest.getPlaca())
+                .placa(placaNormalizada)
                 .marca(vehiculoRequest.getMarca())
                 .modelo(vehiculoRequest.getModelo())
                 .capacidadLibras(vehiculoRequest.getCapacidadLibras())
@@ -62,6 +68,7 @@ public class VehiculoServiceImpl implements VehiculoService {
         VehiculoEntity guardado = vehiculoRepository.save(entity);
         return ApiResponse.success(guardado.getIdVehiculo(), "Vehículo registrado correctamente");
     }
+
 
     @Override
     public ApiResponse<Integer> actualizarVehiculo(int idVehiculo, VehiculoRequest vehiculoRequest) {

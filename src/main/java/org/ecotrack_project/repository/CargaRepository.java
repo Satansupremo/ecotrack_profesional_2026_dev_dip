@@ -40,34 +40,38 @@ public interface CargaRepository extends JpaRepository<CargaEntity, Integer> {
             @Param("fechaFin") LocalDateTime fechaFin
     );
 
+
     @Query(value = """
-        SELECT new org.ecotrack_project.dto.response.CantidadCargasResponse(
-            u.idUsuario,
-            CONCAT(u.nombre, ' ', u.apellido),
-            u.dni,
-            u.rol,
-            COUNT(c)
-        )
-        FROM CargaEntity c
-        JOIN c.operario o
-        JOIN c.transportista t
-        JOIN UsuarioEntity u ON (u.idUsuario = o.idUsuario OR u.idUsuario = t.idUsuario)
-        WHERE c.fechaRegistro BETWEEN :fechaInicio AND :fechaFin
-        GROUP BY u.idUsuario, u.nombre, u.apellido, u.dni, u.rol
-    """,
+    SELECT new org.ecotrack_project.dto.response.CantidadCargasResponse(
+        u.idUsuario,
+        CONCAT(u.nombre, ' ', u.apellido),
+        u.dni,
+        u.rol,
+        COUNT(c)
+    )
+    FROM CargaEntity c
+    JOIN c.operario o
+    JOIN c.transportista t
+    JOIN UsuarioEntity u ON (u.idUsuario = o.idUsuario OR u.idUsuario = t.idUsuario)
+    WHERE u.rol = org.ecotrack_project.enums.Rol.TRANSPORTISTA
+    AND c.fechaRegistro BETWEEN :fechaInicio AND :fechaFin
+    GROUP BY u.idUsuario, u.nombre, u.apellido, u.dni, u.rol
+""",
             countQuery = """
-        SELECT COUNT(DISTINCT u.idUsuario)
-        FROM CargaEntity c
-        JOIN c.operario o
-        JOIN c.transportista t
-        JOIN UsuarioEntity u ON (u.idUsuario = o.idUsuario OR u.idUsuario = t.idUsuario)
-        WHERE c.fechaRegistro BETWEEN :fechaInicio AND :fechaFin
-    """)
+    SELECT COUNT(DISTINCT u.idUsuario)
+    FROM CargaEntity c
+    JOIN c.operario o
+    JOIN c.transportista t
+    JOIN UsuarioEntity u ON (u.idUsuario = o.idUsuario OR u.idUsuario = t.idUsuario)
+    WHERE u.rol = org.ecotrack_project.enums.Rol.TRANSPORTISTA
+    AND c.fechaRegistro BETWEEN :fechaInicio AND :fechaFin
+""")
     Page<CantidadCargasResponse> obtenerRendimientoGeneralCargasPaginado(
             @Param("fechaInicio") LocalDateTime fechaInicio,
             @Param("fechaFin") LocalDateTime fechaFin,
             Pageable pageable
     );
+
     // --- MÉTODOS EXISTENTES MANTENIDOS INTACTOS ---
     List<CargaEntity> findByProgramacion_IdProgramacionOrderByFechaRegistroDesc(int idProgramacion);
     boolean existsByCola_IdCola(int idCola);

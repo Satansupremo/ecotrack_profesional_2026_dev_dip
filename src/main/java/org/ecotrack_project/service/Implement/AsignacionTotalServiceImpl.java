@@ -49,8 +49,10 @@ public class AsignacionTotalServiceImpl implements AsignacionTotalService {
 
         UsuarioEntity usuario = usuarioOptional.get();
 
-        if (usuario.getRol() != Rol.COORDINADOR) {
-            return ApiResponse.error("No está autorizado para realizar esta operación");
+        if (usuario.getRol() != Rol.COORDINADOR && usuario.getRol() != Rol.ADMINISTRADOR) {
+            return ApiResponse.error(
+                    "No está autorizado para realizar esta operación"
+            );
         }
 
         Optional<SolicitudEntity> solicitudOptional =
@@ -204,7 +206,7 @@ public class AsignacionTotalServiceImpl implements AsignacionTotalService {
 
         UsuarioEntity usuario = usuarioOptional.get();
 
-        if (usuario.getRol() != Rol.COORDINADOR) {
+        if (usuario.getRol() != Rol.COORDINADOR && usuario.getRol() != Rol.ADMINISTRADOR) {
             return ApiResponse.error(
                     "No está autorizado para realizar esta operación"
             );

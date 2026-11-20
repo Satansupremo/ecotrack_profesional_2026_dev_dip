@@ -59,6 +59,11 @@ public class PagoTotalServiceImpl implements PagoTotalService {
             return ApiResponse.error("Medio de pago no encontrado o no disponible");
         }
 
+        if (request.getMonto().compareTo(asignacion.getMontoPorCobrar()) > 0) {
+            return ApiResponse.error("El monto ingresado no puede ser mayor al monto por cobrar ("
+                    + asignacion.getMontoPorCobrar() + ")");
+        }
+
         PagoTotalEntity pago = PagoTotalEntity.builder()
                 .monto(request.getMonto())
                 .fechaOperacion(request.getFechaOperacion())
