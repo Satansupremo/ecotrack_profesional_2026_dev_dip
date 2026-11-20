@@ -14,7 +14,7 @@ CREATE TABLE tb_usuario (
     celular VARCHAR(255),
     username VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    dni VARCHAR(255) NOT NULL UNIQUE,
+    dni VARCHAR(255) NOT NULL,
     estado BOOLEAN NOT NULL,
     rol VARCHAR(255) NOT NULL,
     situacion VARCHAR(255) NOT NULL
