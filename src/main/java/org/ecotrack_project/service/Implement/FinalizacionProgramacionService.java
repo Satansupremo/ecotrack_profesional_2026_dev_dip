@@ -1,15 +1,13 @@
 
 package org.ecotrack_project.service.Implement;
 
+import org.ecotrack_project.entity.NotificacionEntity;
 import org.ecotrack_project.entity.ProgramacionEntity;
 import org.ecotrack_project.entity.SolicitudEntity;
 import org.ecotrack_project.enums.EstadoCarga;
 import org.ecotrack_project.enums.EstadoProgramacion;
 import org.ecotrack_project.enums.EstadoSolicitud;
-import org.ecotrack_project.repository.CargaRepository;
-import org.ecotrack_project.repository.ColaRepository;
-import org.ecotrack_project.repository.ProgramacionRepository;
-import org.ecotrack_project.repository.SolicitudRepository;
+import org.ecotrack_project.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,19 +21,22 @@ public class FinalizacionProgramacionService {
     private final ColaRepository colaRepository;
     private final CargaRepository cargaRepository;
     private final LiberacionRecursosService liberacionRecursosService;
+    private final NotificacionRepository notificacionRepository;
 
     public FinalizacionProgramacionService(
             ProgramacionRepository programacionRepository,
             SolicitudRepository solicitudRepository,
             ColaRepository colaRepository,
             CargaRepository cargaRepository,
-            LiberacionRecursosService liberacionRecursosService
+            LiberacionRecursosService liberacionRecursosService,
+            NotificacionRepository notificacionRepository
     ) {
         this.programacionRepository = programacionRepository;
         this.solicitudRepository = solicitudRepository;
         this.colaRepository = colaRepository;
         this.cargaRepository = cargaRepository;
         this.liberacionRecursosService = liberacionRecursosService;
+        this.notificacionRepository = notificacionRepository;
     }
 
     @Transactional
@@ -79,6 +80,12 @@ public class FinalizacionProgramacionService {
 
         solicitud.setEstado(EstadoSolicitud.FINALIZADO);
         solicitud.setFechaFinalizacion(fechaFinalizacion);
+
+        NotificacionEntity notificacion = new NotificacionEntity();
+        notificacion.setUsuario(solicitud.getUsuario());
+        notificacion.setEstado(false);
+        notificacion.setDescripcion("¡Importante! La solicitud con codigo: " + solicitud.getIdSolicitud() + ", ha finalizado exitosamente.");
+        notificacionRepository.save(notificacion);
 
         solicitudRepository.save(solicitud);
 

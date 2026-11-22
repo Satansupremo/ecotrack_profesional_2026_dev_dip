@@ -35,7 +35,7 @@ public class CargaServiceImpl implements CargaService {
     private final LiberacionRecursosService liberacionRecursosService;
     private final ArticuloRecuperadoRepository articuloRecuperadoRepository;
     private final FinalizacionProgramacionService finalizacionProgramacionService;
-    private final UsuarioRepository usuarioRepository;
+    private final NotificacionRepository notificacionRepository;
 
     public CargaServiceImpl(
             CargaRepository cargaRepository,
@@ -43,16 +43,16 @@ public class CargaServiceImpl implements CargaService {
             ProgramacionRepository programacionRepository,
             LiberacionRecursosService liberacionRecursosService,
             ArticuloRecuperadoRepository articuloRecuperadoRepository,
-            UsuarioRepository usuarioRepository,
-            FinalizacionProgramacionService finalizacionProgramacionService
+            FinalizacionProgramacionService finalizacionProgramacionService,
+            NotificacionRepository notificacionRepository
     ) {
         this.cargaRepository = cargaRepository;
         this.colaRepository = colaRepository;
         this.programacionRepository = programacionRepository;
         this.liberacionRecursosService = liberacionRecursosService;
         this.articuloRecuperadoRepository = articuloRecuperadoRepository;
-        this.usuarioRepository = usuarioRepository;
         this.finalizacionProgramacionService = finalizacionProgramacionService;
+        this.notificacionRepository = notificacionRepository;
     }
 
     @Override
@@ -369,6 +369,15 @@ public class CargaServiceImpl implements CargaService {
             if (totalSalidas == totalCargas) {
 
                 programacion.setEstado(EstadoProgramacion.FINALIZADO);
+
+                SolicitudEntity solicitud = programacion.getSolicitud();
+                NotificacionEntity notificacion = new NotificacionEntity();
+                notificacion.setUsuario(solicitud.getUsuario());
+                notificacion.setEstado(false);
+                notificacion.setDescripcion("¡Importante! La solicitud con codigo: " + solicitud.getIdSolicitud() + ", ha finalizado exitosamente.");
+                notificacionRepository.save(notificacion);
+
+
                 programacion.setFechaFinalizacion(LocalDateTime.now());
 
                 liberacionRecursosService.liberarRecursos(idProgramacion);

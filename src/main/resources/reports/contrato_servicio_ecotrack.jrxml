@@ -274,15 +274,7 @@
                         verticalAlignment="Middle">
                     <font fontName="SansSerif" size="14" isBold="true"/>
                 </textElement>
-                <textFieldExpression class="java.math.BigDecimal"><![CDATA[
-$P{pagoInicial} == null
-    ? ($P{pagoTotal} == null
-        ? java.math.BigDecimal.ZERO
-        : $P{pagoTotal})
-    : ($P{pagoTotal} == null
-        ? $P{pagoInicial}
-        : $P{pagoInicial}.add($P{pagoTotal}))
-                ]]></textFieldExpression>
+                <textFieldExpression class="java.math.BigDecimal"><![CDATA[$P{pagoTotal}]]></textFieldExpression>
             </textField>
 
             <!-- CONSTANCIA -->

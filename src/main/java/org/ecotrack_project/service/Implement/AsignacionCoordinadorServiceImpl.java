@@ -105,7 +105,7 @@ public class AsignacionCoordinadorServiceImpl implements AsignacionCoordinadorSe
 
         UsuarioEntity usuario = usuarioOptional.get();
 
-        if (usuario.getRol() != Rol.COORDINADOR) {
+        if (usuario.getRol() != Rol.COORDINADOR && usuario.getRol() != Rol.ADMINISTRADOR) {
             return ApiResponse.error("No está autorizado para realizar esta operación");
         }
 

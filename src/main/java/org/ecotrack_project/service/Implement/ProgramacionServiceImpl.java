@@ -1086,6 +1086,8 @@ public class ProgramacionServiceImpl implements ProgramacionService {
 
         programacion.setEstado(EstadoProgramacion.POR_FINALIZAR);
 
+
+
         programacionRepository.saveAndFlush(programacion);
 
         boolean finalizada =
